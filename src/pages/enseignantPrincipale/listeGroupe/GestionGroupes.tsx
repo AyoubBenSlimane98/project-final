@@ -1,6 +1,5 @@
 import { AiOutlinePartition, AiOutlineSolution } from "react-icons/ai";
 import { IoMdArrowForward } from "react-icons/io";
-import { RiDeleteBin5Fill } from "react-icons/ri";
 import { TiGroup } from "react-icons/ti";
 import { NavLink } from "react-router";
 
@@ -19,14 +18,14 @@ const GestionGroupes = () => {
                     <div className=" inline-flex items-center space-x-3"><AiOutlinePartition className=" text-xl" />  <span className="font-medium"> Affecter theme </span></div>
                     <IoMdArrowForward className="text-2xl" />
                 </NavLink>
-                <NavLink to='/admin/parametre/annonces-bloque' className="w-full h-20 flex items-center justify-between gap-3 duration-300 px-6 transform ease-in-out transition-all shadow bg-[#F4F7FD] text-[#080809] hover:bg-[#E3E6E9]  rounded-md py-4 ">
-                    <div className=" inline-flex items-center space-x-3"><AiOutlineSolution className=" text-xl" />  <span className="font-medium"> Éditer un groupe </span></div>
+                <NavLink to='/ens-principale/gestion-groupes/editer-groupes' className="w-full h-20 flex items-center justify-between gap-3 duration-300 px-6 transform ease-in-out transition-all shadow bg-[#F4F7FD] text-[#080809] hover:bg-[#E3E6E9]  rounded-md py-4 ">
+                    <div className=" inline-flex items-center space-x-3"><AiOutlineSolution className=" text-xl" />  <span className="font-medium"> Éditer groupes </span></div>
                     <IoMdArrowForward className="text-2xl" />
                 </NavLink>
-                <NavLink to='/admin/parametre/annonces-bloque' className="w-full h-20 flex items-center justify-between gap-3 duration-300 px-6 transform ease-in-out transition-all shadow bg-[#F4F7FD] text-[#080809] hover:bg-[#E3E6E9]  rounded-md py-4 ">
+                {/* <NavLink to='/admin/parametre/annonces-bloque' className="w-full h-20 flex items-center justify-between gap-3 duration-300 px-6 transform ease-in-out transition-all shadow bg-[#F4F7FD] text-[#080809] hover:bg-[#E3E6E9]  rounded-md py-4 ">
                     <div className=" inline-flex items-center space-x-3"><RiDeleteBin5Fill className=" text-xl" />  <span className="font-medium"> Supprimer un groupe </span></div>
                     <IoMdArrowForward className="text-2xl" />
-                </NavLink>
+                </NavLink> */}
                
             </div>
         </section>

@@ -1,77 +1,62 @@
-import {
-    useReactTable,
-    getCoreRowModel,
-    createColumnHelper,
-    flexRender,
-    getSortedRowModel,
-    getFilteredRowModel,
-    getPaginationRowModel,
-} from "@tanstack/react-table";
-import { useState } from "react";
-import { BiSortAlt2 } from "react-icons/bi";
-import { FaSearch, FaUser, FaUserLock } from "react-icons/fa";
-import { FaCircleUser, } from "react-icons/fa6";
+import { createColumnHelper, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
+import { useMemo, useState } from "react";
+import { BiArrowBack, BiSortAlt2 } from "react-icons/bi"
+import { FaSearch, FaUser } from "react-icons/fa";
+import { FaCircleUser } from "react-icons/fa6";
 import { FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight } from "react-icons/fi";
-import { MdEmail } from "react-icons/md";
+import { MdGroups2 } from "react-icons/md";
+import { RiPagesLine } from "react-icons/ri";
+import { NavLink } from "react-router"
 
-import { RiDeleteBin5Fill } from "react-icons/ri";
-import { TbLockAccess } from "react-icons/tb";
-
-export type BinomesTypes = {
-    image?: string;
-    etudiantID: number;
+export type ListeThemePrpos = {
+    id: number;
     fullName: string;
-    email: string;
-    matricule: number;
     groupe: number;
-};
-
+    theme: string;
+}
 export type ColumnSort = {
     id: string;
     desc: boolean;
 };
+const ListeData: ListeThemePrpos[] = [
+    { "id": 1, "fullName": "A", "groupe": 1, "theme": "Theme A" },
+    { "id": 2, "fullName": "B", "groupe": 2, "theme": "Theme B" },
+    { "id": 3, "fullName": "C", "groupe": 3, "theme": "Theme C" },
+    { "id": 4, "fullName": "D", "groupe": 4, "theme": "Theme D" },
+    { "id": 5, "fullName": "E", "groupe": 5, "theme": "Theme A" },
+    { "id": 6, "fullName": "A", "groupe": 6, "theme": "Theme B" },
+    { "id": 7, "fullName": "B", "groupe": 7, "theme": "Theme C" },
+    { "id": 8, "fullName": "C", "groupe": 8, "theme": "Theme D" },
+    { "id": 9, "fullName": "D", "groupe": 1, "theme": "Theme A" },
+    { "id": 10, "fullName": "E", "groupe": 2, "theme": "Theme B" },
+    { "id": 11, "fullName": "A", "groupe": 3, "theme": "Theme C" },
+    { "id": 12, "fullName": "B", "groupe": 4, "theme": "Theme D" },
+    { "id": 13, "fullName": "C", "groupe": 5, "theme": "Theme A" },
+    { "id": 14, "fullName": "D", "groupe": 6, "theme": "Theme B" },
+    { "id": 15, "fullName": "E", "groupe": 7, "theme": "Theme C" },
+    { "id": 16, "fullName": "A", "groupe": 8, "theme": "Theme D" },
+    { "id": 17, "fullName": "B", "groupe": 1, "theme": "Theme A" },
+    { "id": 18, "fullName": "C", "groupe": 2, "theme": "Theme B" },
+    { "id": 19, "fullName": "D", "groupe": 3, "theme": "Theme C" },
+    { "id": 20, "fullName": "E", "groupe": 4, "theme": "Theme D" }
+]
+
 export type SortingState = ColumnSort[];
-
-const generateRandomBinomes = (count: number): BinomesTypes[] => {
-    const names = ["Ayyoub Benslimane", "Amira Manaer", "Karim Belhadj", "Nadia Saidi", "Mohamed Chibane", "Leila Hamidi", "Walid Zeroual", "Sonia Khelifi", "Hakim Benyahia", "Yasmine Lounis"];
-    const domains = ["gmail.com", "yahoo.com", "outlook.com"];
-    const binomes: BinomesTypes[] = [];
-
-    for (let i = 1; i <= count; i++) {
-        const name = names[Math.floor(Math.random() * names.length)];
-        const email = name.toLowerCase().replace(" ", "_") + "@" + domains[Math.floor(Math.random() * domains.length)];
-        const matricule = 212234520000 + i;
-        const groupe = Math.floor(Math.random() * 10) + 1; // Groups from 1 to 10
-
-        binomes.push({
-            etudiantID: i,
-            fullName: name,
-            email,
-            matricule,
-            groupe,
-        });
-    }
-    return binomes;
-};
-
-const list_binome: BinomesTypes[] = generateRandomBinomes(100);
-
-const Utilisateur = () => {
-    const columnHelper = createColumnHelper<BinomesTypes>();
+const ListeAffectionTheme = () => {
+    const columnHelper = createColumnHelper<ListeThemePrpos>();
     const [sorting, setSorting] = useState<SortingState>([]);
     const [globalFilter, setGlobalFilter] = useState('');
-    const [selectorUser, setSelectorUser] = useState<BinomesTypes | undefined>();
 
-    const [isopen, setIsopen] = useState<boolean>(false);
+
     const [pagination, setPagination] = useState({
         pageIndex: 0,
-        pageSize: 10,
+        pageSize: 8,
     });
-    const [data, setData] = useState<BinomesTypes[]>(list_binome);
+    const [data] = useState<ListeThemePrpos[]>(ListeData);
 
 
-    const columns = [
-        columnHelper.accessor('etudiantID', {
+    const columns = useMemo(() => [
+        columnHelper.accessor("id", {
             cell: (info) => info.getValue(),
             header: () => (
                 <span className="flex items-center text-white font-medium ">
@@ -79,30 +64,23 @@ const Utilisateur = () => {
                 </span>
             ),
         }),
-        columnHelper.accessor('matricule', {
-            cell: (info) => info.getValue(),
-            header: () => (
-                <span className="flex items-center text-white font-medium text-nowrap">
-                    <FaUserLock className="mr-2 text-xl" /> Nom d'utilisateur
-                </span>
-            ),
-        }),
+
         columnHelper.accessor('fullName', {
             cell: (info) => info.getValue(),
             header: () => (
                 <span className="font-medium text-white flex items-center text-nowrap ">
-                    <FaCircleUser className="mr-2 text-xl" /> Nom et Prénom
+                    <FaCircleUser className="mr-2 text-xl" /> Enseignant responsable
                 </span>
             ),
         }),
-        columnHelper.accessor('email', {
-            id: 'email',
+        columnHelper.accessor("theme", {
+
             cell: (info) => (
-                <span className="italic text-blue-600">{info.getValue() as string} </span>
+                <span className="italic text-blue-600">{info.getValue()} </span>
             ),
             header: () => (
                 <span className="flex items-center text-white font-medium">
-                    <MdEmail className="mr-2 text-xl" /> Email
+                    <RiPagesLine className="mr-2 text-xl" /> Theme
                 </span>
             ),
         }),
@@ -110,24 +88,13 @@ const Utilisateur = () => {
             cell: (info) => info.getValue(),
             header: () => (
                 <span className="font-medium text-white flex items-center ">
-                    <TbLockAccess className="mr-2 text-xl" /> Rôle
+                    <MdGroups2 className="mr-2 text-xl" /> Groupe
                 </span>
             ),
         }),
-        columnHelper.display(
-            {
-                id: "delete",
-                cell: ({ row }) => (
-                    <div
-                        className="w-full  flex items-center justify-center pl-2"
-                        onClick={() => { setSelectorUser(row.original as BinomesTypes); setIsopen(true); }}
-                    >
-                        <RiDeleteBin5Fill className="mr-2 text-xl text-red-400 hover:text-red-600 " />
-                    </div>
-                ),
-                header: "Action"
-            }),
-    ];
+    ], [columnHelper]);
+
+
 
     const table = useReactTable({
         columns,
@@ -145,15 +112,9 @@ const Utilisateur = () => {
         onPaginationChange: setPagination,
         getPaginationRowModel: getPaginationRowModel(),
     });
-
-    const deleteRow = () => {
-        setData(prevData => prevData.filter(row => row.etudiantID !== selectorUser?.etudiantID));
-        setIsopen(false);
-    };
     return (
-        <main className="flex flex-col h-svh w-full mx-auto py-10 px-4 sm:px-6 lg:px-8  bg-[#F4F7FD]  relative ">
-
-            <div className="mb-8 relative">
+        <section className="flex flex-col  h-svh w-full gap-4 mx-auto py-14 px-4 sm:px-6 lg:px-8  bg-[#F4F7FD]  relative ">
+            <div className="relative w-full mb-6">
                 <input
                     value={globalFilter ?? ""}
                     onChange={(e) => setGlobalFilter(e.target.value)}
@@ -162,9 +123,8 @@ const Utilisateur = () => {
                 />
                 <FaSearch className=" absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 " />
             </div>
-            <div className={`bg-white shadow-md rounded-lg ${pagination.pageSize > 10 ? "overflow-auto" : ""} `}>
-                <table className="min-w-full max-h-[574px] divide-y divide-gray-200   ">
-
+            <div className={`bg-white w-full max-h-[468px] shadow-md rounded-lg ${pagination.pageSize > 8 ? "overflow-auto" : ""}  mb-3`}>
+                <table className="min-w-full  divide-y divide-gray-200   ">
                     <thead className="bg-black">
                         {table.getHeaderGroups().map((headerGroupe) => (
                             <tr key={headerGroupe.id}>
@@ -206,16 +166,15 @@ const Utilisateur = () => {
                         ))}
                     </tbody>
                 </table>
-
             </div>
-            <div className="flex flex-col sm:flex-row justify-between items-center mt-6 text-sm text-gray-700">
+            <div className="flex flex-col sm:flex-row justify-between items-center  text-sm text-gray-700 w-full">
                 <div className="flex items-center mb-4 sm:mb-0">
                     <span className="mr-2 font-medium">Items per page</span>
-                    <select className="border bg-white  border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2 cursor-pointer"
+                    <select className="border bg-white  border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2 cursor-pointer w-20"
                         value={table.getState().pagination.pageSize}
                         onChange={(e) => table.setPageSize(Number(e.target.value))}
                     >
-                        {[5, 10, 15, 20, 30, 40, 50, 100].map((pageSize) => (
+                        {[4, 8, 12, 16, 20].map((pageSize) => (
                             <option key={pageSize} value={pageSize} >
                                 {pageSize}
                             </option>
@@ -263,30 +222,12 @@ const Utilisateur = () => {
                     </button>
                 </div>
             </div>
-
-            {
-                isopen && <div className="z-50 w-[520px] h-56 bg-white flex flex-col items-center justify-center rounded-[20px]  drop-shadow-lg shadow absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2" >
-                    <div className="mb-6">
-                        <h2 className=" font-medium text-xl mb-2">Voulez-vous vraiment supprimer cet utilisateur  ?</h2>
-                        <div className="flex flex-col px-6 font-serif ">
-                            <p>Nom et Pernom : <span className="text-blue-600">{selectorUser?.fullName}</span></p>
-                            <p>Email : <span className="text-blue-600">{selectorUser?.email}</span></p>
-                        </div>
-                    </div>
-                    <div className="w-full flex items-center justify-center gap-x-6 ">
-                        <button className="outline-none w-44  border border-gray-400 text-black hover:bg-gray-950 rounded-md py-1.5 hover:text-white font-medium transform duration-200 ease-in-out transition-all cursor-pointer" onClick={() => { setIsopen(false); }} >
-                            Annuler
-                        </button>
-                        <button className="outline-none w-44 border-none  bg-red-500 hover:bg-red-700 rounded-md py-1.5 text-white font-medium transform duration-200 ease-in-out transition-all cursor-pointer" onClick={deleteRow}  >
-                            supprimer
-                        </button>
-                    </div>
-                </div>
-            }
-            <section className={` ${isopen ? "absolute top-0 left-0 w-full h-svh bg-black/45 z-30" : ""} `}></section>
-        </main>
-
+            <NavLink to="/ens-principale/affecter-theme" className=" fixed bottom-8  right-4 bg-green-500 hover:bg-green-600 transform ease-in-out duration-300 transition-all text-white w-12 h-12 rounded-full flex items-center justify-center">
+                <BiArrowBack className="text-2xl" />
+            </NavLink>
+        </section>
     )
 }
 
-export default Utilisateur;
+export default ListeAffectionTheme
+

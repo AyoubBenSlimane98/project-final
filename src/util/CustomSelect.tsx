@@ -1,19 +1,12 @@
-
-import { ChangeEvent, useEffect, useState } from 'react'
-import { BiArrowBack } from 'react-icons/bi'
-import { FiChevronDown, FiChevronUp } from 'react-icons/fi'
-import { GiCheckMark } from 'react-icons/gi'
-
-import { NavLink } from 'react-router'
+import { ChangeEvent, useEffect, useState } from "react";
+import { FiChevronDown, FiChevronUp } from "react-icons/fi";
+import { GiCheckMark } from "react-icons/gi";
 type CustomSelectProps = {
     responsable: string[];
     label: string;
 };
-const responsable: string[] = ["A", "B", "C", "D", "E"]
-const theme_of_responable: string[] = ["Theme A", "Theme B", "Theme C", "Theme D",]
-const groupes: string[] = ["Groupe 1", "Groupe 2", "Groupe 3", "Groupe 4", "Groupe 5", "Groupe 6", "Groupe 7", "Groupe 8"]
 
-function CustomSelect({ responsable, label }: CustomSelectProps) {
+export const CustomSelect = ({ responsable, label }: CustomSelectProps) => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const [dataResponsable, setDataResponsable] = useState<string[]>(responsable);
     const [itemSelection, setItemSelection] = useState<string>(responsable.length > 0 ? responsable[0] : "");
@@ -76,50 +69,5 @@ function CustomSelect({ responsable, label }: CustomSelectProps) {
         </div>
     );
 }
-function InfoAffection() {
-    const data: CustomSelectProps[] = [
-        { responsable: responsable, label: "Veuillez sélectionner un enseignant responsable :" },
-        { responsable: theme_of_responable, label: 'Veuillez sélectionner un theme :' },
-        { responsable: groupes, label: "Veuillez sélectionner un groupe :" }
-    ];
-    return (
-        <div className='w-2xl py-10 bg-white rounded-md drop-shadow-md shadow px-10'>
-            <div className='space-y-2 mb-4'>
-                {data.map((_d, index) => (<CustomSelect key={index} {..._d} />))}
-            </div>
-            <div className="w-full flex justify-end items-center py-2 mr-20 pr-1 -mt-6 mb-4">
-                <NavLink to="/ens-principale/gestion-groupes/liste-affection-theme" className="text-blue-500 text-sm font-medium underline">
-                    Voir tous les effets
-                </NavLink>
-            </div>
-            <div className=' flex items-center justify-center gap-x-6 '>
-                <button
-                    type="button"
-                    className="outline-none basis-1/2 border-none bg-blue-500 hover:bg-blue-600 rounded-md py-2 text-white font-medium transition-all cursor-pointer"
-                >
-                    Affecter
-                </button>
-                <button
-                    type="button"
-                    className="outline-none basis-1/2 border-none bg-red-500 hover:bg-red-700 rounded-md py-2 text-white font-medium transition-all cursor-pointer"
-                >
-                    Annuler
-                </button>
-            </div>
-        </div>
 
-    )
-}
 
-const AffecterTheme = () => {
-    return (
-        <section className="w-full h-svh px-6 pb-10 flex flex-col items-center justify-center  gap-4 md:gap-6 sm:px-10 sm:py-6 overflow-auto bg-[#F4F7FD]">
-            <InfoAffection />
-            <NavLink to="/ens-principale/gestion-groupes" className=" fixed bottom-8  right-4 bg-green-500 hover:bg-green-600 transform ease-in-out duration-300 transition-all text-white w-12 h-12 rounded-full flex items-center justify-center">
-                <BiArrowBack className="text-2xl" />
-            </NavLink>
-        </section>
-    )
-}
-
-export default AffecterTheme
