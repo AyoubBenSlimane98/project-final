@@ -126,12 +126,4 @@ const SignIN = () => {
     );
 };
 
-
-
 export default SignIN;
-
-<div className=' relative border-b mb-4'>
-    <span className='w-10 text-center absolute -top-3 bg-white left-1/2 -translate-x-1/2  uppercase text-[0.9rem] font-normal '>
-        or
-    </span>
-</div>

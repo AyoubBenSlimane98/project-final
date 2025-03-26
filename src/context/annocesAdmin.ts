@@ -3,7 +3,9 @@ import { Posts } from "../pages/admin/Consulter_annonces/ConsulterAnnonces";
 
 type AnnocesAdmin = {
   blockPost: (post: Posts) => void;
+  updatePosts: Posts | null;
   blockedPosts: Posts[];
+  setUpdatePosts: (post: Posts | null) => void;
   setPostToDelete: (post: Posts | null) => void;
 };
 

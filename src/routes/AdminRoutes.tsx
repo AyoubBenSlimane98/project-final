@@ -11,15 +11,17 @@ import Welcome from '../pages/admin/welcome/Welcome';
 const AdminRoutes = (
     <>
         <Route path="/admin" element={<LayoutAdmin />}>
-            <Route path='' element={<Welcome />} />
-            <Route path='ajouter-annoces' element={<AjouterAnnonces />} />
-            <Route path='annonces' element={<ConsulterAnnonces />} />
-            <Route path='utilisateurs' element={<Utilisateur />} />
-            <Route path='parametre' element={<Parametre />} />
-            <Route path='parametre/annonces-bloque' element={<AnnoncesBloque />} />
-            <Route path='parametre/profil' element={<Compte />} />
+            <Route index element={<Welcome />} />
+            <Route path="ajouter-annoces" element={<AjouterAnnonces />} />
+            <Route path="annonces" element={<ConsulterAnnonces />} />
+            <Route path="utilisateurs" element={<Utilisateur />} />
+            <Route path="parametre" element={<Parametre />} />
+            <Route path="parametre/annonces-bloque" element={<AnnoncesBloque />} />
+            <Route path="parametre/profil" element={<Compte />} />
         </Route>
     </>
-)
+);
 
 export default AdminRoutes;
+
+

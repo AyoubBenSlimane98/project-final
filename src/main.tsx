@@ -5,16 +5,16 @@ import { StrictMode } from "react";
 import NotFound from "./pages/not found 404/NotFound.tsx";
 import AuthRoutes from "./routes/AuthRoutes.tsx";
 import EnsRespobsableRoutes from "./routes/EnsRespobsableRoutes.tsx";
-import AdminRoutes from "./routes/AdminRoutes.tsx";
 import EnsPrincipaleRoutes from "./routes/EnsPrincipaleRoutes.tsx";
+import AdminRoutes from "./routes/AdminRoutes.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
         {AuthRoutes}
-        {EnsRespobsableRoutes}
         {AdminRoutes}
+        {EnsRespobsableRoutes}
         {EnsPrincipaleRoutes}
         <Route path="*" element={<NotFound />} />
       </Routes>

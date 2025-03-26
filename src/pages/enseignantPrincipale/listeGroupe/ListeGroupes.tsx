@@ -309,13 +309,7 @@ const ListeGroupes = () => {
         getFilteredRowModel: getFilteredRowModel(),
 
     });
-
-
-
-
-
-
-    return (
+return (
         <section className="flex flex-col  h-svh w-full gap-4 mx-auto py-10 px-4 sm:px-6 lg:px-8  bg-[#F4F7FD] relative ">
             <section className="">
                 <div className=" flex justify-between items-center mb-8">
