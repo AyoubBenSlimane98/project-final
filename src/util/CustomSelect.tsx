@@ -3,7 +3,7 @@ import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 import { GiCheckMark } from "react-icons/gi";
 type CustomSelectProps = {
     responsable: string[];
-    label: string;
+    label?: string;
 };
 
 export const CustomSelect = ({ responsable, label }: CustomSelectProps) => {
@@ -29,8 +29,8 @@ export const CustomSelect = ({ responsable, label }: CustomSelectProps) => {
     };
 
     return (
-        <div className='w-full flex flex-col gap-2 text-[#09090B] py-1 ' >
-            <h2 className='block mb-2 text-md font-medium text-gray-900'>{label} </h2>
+        <div className='w-full flex flex-col gap-2 text-[#09090B] ' >
+            {label && <h2 className='block text-md font-medium text-gray-700'>{label} </h2>}
             <div className='relative w-full'>
                 <div className='relative mb-2'>
                     <input

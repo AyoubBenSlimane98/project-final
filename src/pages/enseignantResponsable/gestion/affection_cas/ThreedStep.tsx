@@ -33,7 +33,7 @@ function ThirdStep() {
 
     const prevStep = useCallback(() => {
         setCurrentNextstep(!currentNextstep);
-        navigate('/gestion-affection-les-cas/step2');
+        navigate('/ens-responsable/gestion-affection-les-cas/step2');
     }, [setCurrentNextstep, currentNextstep, navigate]);
 
     const confirmStep = () => {
@@ -51,7 +51,7 @@ function ThirdStep() {
             setNextstep(false);
             setConfirm(false);
             setBinomeID(-1);
-            navigate('/gestion-affection-les-cas'); // Move inside the timeout
+            navigate('/ens-responsable/gestion-affection-les-cas');
         }, 5000);
         return () => {
             clearTimeout(timer1);

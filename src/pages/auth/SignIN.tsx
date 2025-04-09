@@ -1,7 +1,9 @@
+import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
-
+import Cookies from 'js-cookie';
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
-import { NavLink } from "react-router";
+import { NavLink, useNavigate } from "react-router";
+import { useAuthStore } from "../../store";
 
 type formPros = {
     email: string;
@@ -9,15 +11,54 @@ type formPros = {
     isAcepet: boolean;
 };
 
+const loginFn = async (form: { email: string, password: string }) => {
+    const response = await fetch('http://localhost:4000/api/authentication/sign-in', {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify(form)
+    })
+    if (!response.ok) {
+        throw new Error('Email or Password not courrect')
+    }
+    return response.json();
+}
 const SignIN = () => {
+    const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const setAccessToken = useAuthStore((state) => state.setAccessToken);
     const [form, setForm] = useState<formPros>({
         email: "",
         password: "",
         isAcepet: false,
     });
+    const { mutate } = useMutation({
+        mutationFn: loginFn,
+        onSuccess: (data) => {
+            setIsLoading(true)
+            const { accessToken, refreshtoken } = data.token;
 
+            setAccessToken(accessToken);
+            Cookies.set('refreshToken', refreshtoken, { expires: 30, secure: true, sameSite: 'Strict' });
+            setTimeout(() => {
+                setIsLoading(false)
+                if (data.role === "admin") { navigate('/admin') }
+                if (data.role === "etudiant") { navigate('/etudiant') }
+                if (data.role === "enseignant_responsable") { navigate('/ens-responsable') }
+                if (data.role === "enseignant_principal") { navigate('/ens-principale') }
+
+            }, 3000)
+        },
+        onError: (error) => {
+            console.error("Login failed:", error);
+            setError(true);
+        },
+    })
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const [, setError] = useState<boolean>(false);
+
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         event.preventDefault();
         const { name, type, value, checked } = event.target;
@@ -30,15 +71,12 @@ const SignIN = () => {
     const handelPassword = () => {
         setShowPassword(!showPassword);
     };
-    const handleSumbit = () => {
+    const handleSumbit = (e: React.FormEvent) => {
+        e.preventDefault()
         setError(false);
-        const user = { email: "ayyoub@gmail.com", password: "123456" };
-        if (form.email === user.email && form.password === user.password) {
-            window.localStorage.setItem("accessToken", "yes");
-            console.log("is login");
-            setError(true);
-        }
+        mutate({ email: form.email, password: form.password })
     };
+
     return (
         <div className='w-full min-h-screen flex justify-center items-center bg-[#f2f4f8] '>
             <div className='bg-white flex flex-col gap-6 px-8 py-10 rounded-2xl shadow w-[31rem]'>
@@ -56,6 +94,7 @@ const SignIN = () => {
                     <input
                         type='email'
                         name='email'
+                        autoComplete="email"
                         value={form.email}
                         onChange={handleChange}
                         placeholder='Enter your email'
@@ -65,6 +104,7 @@ const SignIN = () => {
                         <input
                             type={`${showPassword ? "text" : "password"}`}
                             name='password'
+                            autoComplete="current-password"
                             value={form.password}
                             onChange={handleChange}
                             placeholder='Enter your password'
@@ -109,8 +149,8 @@ const SignIN = () => {
                             </NavLink>
                         </div>
                     </div>
-                    <button className='bg-gray-900 text-white py-2.5 rounded-lg hover:bg-gray-800 transform duration-300 focus:scale-[0.99] shadow' type="submit">
-                        Sign in
+                    <button type="submit" className='bg-gray-900 text-white py-2.5 rounded-lg hover:bg-gray-800 transform duration-300 focus:scale-[0.99] shadow' >
+                        {isLoading ? " Sign in ..." : " Sign in"}
                     </button>
                 </form>
                 <div className='flex items-center justify-center gap-x-0.5 p'>

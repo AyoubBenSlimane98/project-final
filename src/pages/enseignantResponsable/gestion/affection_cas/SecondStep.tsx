@@ -82,16 +82,16 @@ const SecondStep = () => {
 
     const prevStep = useCallback(() => {
         setNextstep(!nextStep);
-        navigate('/gestion-affection-les-cas');
+        navigate('/ens-responsable/gestion-affection-les-cas');
     }, [setNextstep, nextStep, navigate]);
 
     const suivantStep = useCallback(() => {
         if (cas.length > 0 && user[0].binomeID === binomeId) {
             setCurrentNextStep(!curentNextStep);
-            navigate('/gestion-affection-les-cas/step3');
-        } 
+            navigate('/ens-responsable/gestion-affection-les-cas/step3');
         }
-    , [binomeId, cas.length, curentNextStep, navigate, setCurrentNextStep, user]);
+    }
+        , [binomeId, cas.length, curentNextStep, navigate, setCurrentNextStep, user]);
     return (
         <section className="w-full sm:h-svh  py-6 flex flex-col items-center  ">
             <div className="w-full sm:w-2/3 sm:h-24 flex gap-4 pl-4 sm:gap-10 justify-between items-center mb-6  ">

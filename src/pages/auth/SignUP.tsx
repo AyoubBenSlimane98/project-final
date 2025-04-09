@@ -1,26 +1,52 @@
 import { useMemo, useState, useReducer, InputHTMLAttributes, useId } from "react";
+import Cookies from "js-cookie";
 import { useNavigate } from "react-router";
 import { PiSealQuestionFill } from "react-icons/pi";
 import { IoCloseCircleOutline } from "react-icons/io5";
 import { FaCaretDown, FaEye, FaEyeSlash } from "react-icons/fa";
+import { useMutation } from "@tanstack/react-query";
+import { useAuthStore } from "../../store";
 
-type Role = 'principale' | 'responsable';
-interface State {
-    firstName: string;
-    lastName: string;
+type Role = 'Principale' | 'Responsable';
+interface TypeData {
+    nom: string;
+    prenom: string;
     email: string;
     password: string;
-    dateOfBirth: {
+    dateNaissance: string;
+    sexe: string;
+    role: Role;
+}
+const registerFn = async ({ ...data }: TypeData) => {
+    const response = await fetch('http://localhost:4000/api/authentication/sign-up', {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ ...data })
+    });
+    if (!response.ok) {
+        throw new Error("Conflict Data ,this Email already exists")
+    }
+    return response.json();
+}
+
+interface State {
+    nom: string;
+    prenom: string;
+    email: string;
+    password: string;
+    dateNaissance: {
         day: string;
         month: string;
         year: string;
     };
-    gender: string;
+    sexe: string;
     role: Role;
 }
 type Action =
     | { type: "input"; field: keyof State; value: string }
-    | { type: "input"; field: "dateOfBirth"; value: State["dateOfBirth"] };
+    | { type: "input"; field: "dateNaissance"; value: State["dateNaissance"] };
 
 type InputProps = InputHTMLAttributes<HTMLInputElement> & {
     type?: string;
@@ -74,7 +100,10 @@ const months = [
 ] as string[];
 
 
-
+const convertToISOString = (dob: { day: string; month: string; year: string }): string => {
+    const date = new Date(`${dob.day} ${dob.month} ${dob.year}`);
+    return date.toISOString();
+};
 export const Input = ({ type = "text", className, label, ...props }: InputProps) => {
     const id = useId();
 
@@ -100,17 +129,17 @@ export const Input = ({ type = "text", className, label, ...props }: InputProps)
     );
 };
 const initialState: State = {
-    firstName: "",
-    lastName: "",
+    nom: "",
+    prenom: "",
     email: "",
     password: "",
-    dateOfBirth: {
+    dateNaissance: {
         day: currentDay.toString(),
         month: months[currentMonth],
         year: currentYear.toString(),
     },
-    gender: "male",
-    role: "responsable"
+    sexe: "Male",
+    role: "Responsable"
 };
 
 const reducer = (state: State, action: Action) => {
@@ -125,9 +154,12 @@ const reducer = (state: State, action: Action) => {
     }
 };
 
-const role: string[] = ["------------------- what is your role ? -------------------", "responsable", "principale"];
+const role: string[] = ["------------------- what is your role ? -------------------", "Responsable", "Principale"];
 
 const SignUP = () => {
+
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const setAccessToken = useAuthStore((state) => state.setAccessToken);
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const [showQue, setShowQue] = useState<boolean>(false);
     const [closeFrom, setCloseFrom] = useState<boolean>(false);
@@ -151,7 +183,7 @@ const SignUP = () => {
     };
     const handelCloseForm = () => {
         setCloseFrom(!closeFrom);
-        navigate('/');
+        navigate('/sign-in');
     };
     const handleChange = (
         event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -161,8 +193,8 @@ const SignUP = () => {
         if (name === "day" || name === "month" || name === "year") {
             dispatch({
                 type: "input",
-                field: "dateOfBirth",
-                value: { ...state.dateOfBirth, [name]: value },
+                field: "dateNaissance",
+                value: { ...state.dateNaissance, [name]: value },
             });
         } else {
             dispatch({
@@ -175,11 +207,34 @@ const SignUP = () => {
     const handelPassword = () => {
         setShowPassword(!showPassword);
     };
+    const { mutate } = useMutation({
+        mutationFn: registerFn,
+        onSuccess: (data) => {
+            setIsLoading(true)
+            const { accessToken, refreshtoken } = data.token;
+            setAccessToken(accessToken);
+            Cookies.set('refreshToken', refreshtoken, { expires: 30, secure: true, sameSite: 'Strict' });
+            setTimeout(() => {
+                setIsLoading(false)
+                if (data.message === "Responsable created successfully") {
+                    navigate('/ens-responsable')
+                }
+                if (data.message === "Principale created successfully") {
+                    navigate('/ens-principale')
+                }
 
+            }, 3000)
+            console.log('Logged in successfully');
+        },
+    })
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        //TODO : get All data
-        console.log(state);
+
+        const { nom, prenom, email, password, dateNaissance, role, sexe } = state;
+        const dobISO = convertToISOString({
+            ...dateNaissance
+        });
+        mutate({ nom, prenom, email, dateNaissance: dobISO, password, role, sexe })
     };
     return (
         <div
@@ -201,15 +256,17 @@ const SignUP = () => {
                 <div className='flex justify-between gap-4 mb-2'>
                     <Input
                         placeholder='First Name'
-                        name='firstName'
-                        value={state.firstName}
+                        autoComplete="nom"
+                        name='nom'
+                        value={state.nom}
                         onChange={handleChange}
                         className='flex-1 '
                     />
                     <Input
                         placeholder='Last Name'
-                        name='lastName'
-                        value={state.lastName}
+                        name='prenom'
+                        autoComplete='prenom'
+                        value={state.prenom}
                         onChange={handleChange}
                         className='flex-1'
                     />
@@ -217,13 +274,14 @@ const SignUP = () => {
                 <Input
                     placeholder='Email'
                     name='email'
+                    autoComplete="email"
                     value={state.email}
                     onChange={handleChange}
                     type='email'
                     className='mb-2'
                 />
                 <div className=" relative">
-                    <input type={showPassword ? "text" : "password"} name="password" placeholder="Password" value={state.password} onChange={handleChange} className={`border border-gray-400 outline-none  py-2.5 px-4 rounded-lg w-full`} />
+                    <input autoComplete="password" type={showPassword ? "text" : "password"} name="password" placeholder="Password" value={state.password} onChange={handleChange} className={`border border-gray-400 outline-none  py-2.5 px-4 rounded-lg w-full`} />
                     {state.password.length > 0 ? (
                         showPassword ? (
                             <FaEye
@@ -252,19 +310,19 @@ const SignUP = () => {
                     <div className='flex items-center justify-between gap-4'>
                         <SelectComponent
                             options={days}
-                            defaultValue={state.dateOfBirth.day}
+                            defaultValue={state.dateNaissance.day}
                             name='day'
                             onChange={handleChange}
                         />
                         <SelectComponent
                             options={months}
-                            defaultValue={state.dateOfBirth.month}
+                            defaultValue={state.dateNaissance.month}
                             name='month'
                             onChange={handleChange}
                         />
                         <SelectComponent
                             options={years}
-                            defaultValue={state.dateOfBirth.year}
+                            defaultValue={state.dateNaissance.year}
                             name='year'
                             onChange={handleChange}
                         />
@@ -283,10 +341,10 @@ const SignUP = () => {
                 <div className='w-full flex flex-col gap-2 mb-2'>
                     <h5 className='text-[1rem] font-light'>Gender</h5>
                     <div className='w-full flex items-center justify-center gap-6'>
-                        {['male', 'female'].map((gender) => (
-                            <label htmlFor={gender} key={gender} className={`basis-1/2 border border-gray-400 flex items-center justify-between px-4 py-1.5 rounded-lg ${state.gender === gender ? "bg-slate-200" : ""}`}>
+                        {['Male', 'Female'].map((gender) => (
+                            <label htmlFor={gender} key={gender} className={`basis-1/2 border border-gray-400 flex items-center justify-between px-4 py-1.5 rounded-lg ${state.sexe === gender ? "bg-slate-200" : ""}`}>
                                 <span >{gender.charAt(0).toUpperCase() + gender.slice(1)}</span>
-                                <input id={gender} type="radio" name="gender" value={gender} checked={state.gender === gender} onChange={handleChange} />
+                                <input id={gender} type="radio" name="sexe" value={gender} checked={state.sexe === gender} onChange={handleChange} />
                             </label>
                         ))}
                     </div>
@@ -300,8 +358,8 @@ const SignUP = () => {
                         className=""
                     />
                 </div>
-                <button className='bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-800 transform duration-300 focus:scale-[0.99] shadow'>
-                    Submit
+                <button className='bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-800 transform duration-300 focus:scale-[0.99] shadow' type="submit">
+                    {isLoading ? "Submit ..." : "Submit"}
                 </button>
             </form>
         </div>

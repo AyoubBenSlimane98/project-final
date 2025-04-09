@@ -1,6 +1,6 @@
 import { FaUserShield } from 'react-icons/fa'
 
-const Welcome = () => {
+const WelcomeEnsP = () => {
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-[#F4F7FD] p-6 w-full h-svh" >
             <div className="bg-white shadow-lg rounded-2xl p-8 text-center h-96 w-3xl flex flex-col items-center justify-center">
@@ -12,4 +12,4 @@ const Welcome = () => {
     )
 }
 
-export default Welcome
+export default WelcomeEnsP;

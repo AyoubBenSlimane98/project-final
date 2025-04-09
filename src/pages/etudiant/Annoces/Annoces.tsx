@@ -1,4 +1,3 @@
-
 import { IoClose, IoSend } from 'react-icons/io5'
 
 import { ChangeEvent, useState } from 'react';
@@ -262,7 +261,7 @@ function PostPop() {
 function Post({ image, content, nbrComment, nbrLike }: Posts) {
     const { setIsOpen, setIsComment, isComment, isOpen } = usePostContext();
     return (
-        <section className='w-[700px] h-auto bg-white flex flex-col pt-4 pb-2 outline-none border  border-white rounded-xl px-4 '>
+        <section className='w-[700px] h-auto bg-white flex flex-col pt-4 pb-2 outline-none border  border-white rounded-xl px-5 drop-shadow-2xl '>
             {/* Header */}
             <header className="py-2.5 flex items-center justify-between  ">
                 <div className="flex items-center justify-baseline gap-4">
@@ -275,9 +274,6 @@ function Post({ image, content, nbrComment, nbrLike }: Posts) {
                         <h2 className="font-medium">Benslimane Ayyoub</h2>
                         <p className="text-[14px] font-mono">Dec 12</p>
                     </div>
-                </div>
-                <div className="hover:bg-gray-100 w-9 h-9 rounded-full flex items-center justify-end transform duration-300 ease-in-out transition cursor-pointer" >
-                    <HiDotsVertical className="text-2xl " />
                 </div>
             </header>
             <hr className="text-gray-200 w-full h-0.5 mb-4" />
@@ -317,7 +313,8 @@ function Post({ image, content, nbrComment, nbrLike }: Posts) {
         </section>
     )
 }
-const AllPost = () => {
+
+const Annoces = () => {
     const [isComment, setIsComment] = useState<boolean>(false)
     const [isOpen, setIsOpen] = useState<boolean>(false);
     return (
@@ -332,5 +329,4 @@ const AllPost = () => {
     )
 }
 
-export default AllPost
-
+export default Annoces;

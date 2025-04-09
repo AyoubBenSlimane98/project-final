@@ -237,14 +237,14 @@ const FirstStep = () => {
   const seenBinomeIDs = new Set<number>();
   const nextStep = (id: number) => {
     const filter: BinomesTypes[] = list_binome.filter((item) => item.binomeID === id);
-    if (binomeID !== id) { 
-        deleteAllCas()
+    if (binomeID !== id) {
+      deleteAllCas()
     }
     if (setBinomeID && filter.length > 0) {
       setBinomeID(id);
       addUser(filter);
       setNextstep(!nextstep);
-      navigate('/gestion-affection-les-cas/step2');
+      navigate('/ens-responsable/gestion-affection-les-cas/step2');
     }
   };
   return (

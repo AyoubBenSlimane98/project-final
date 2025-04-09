@@ -8,12 +8,13 @@ import AffecterTheme from '../pages/enseignantPrincipale/listeGroupe/AffecterThe
 import Profil from '../pages/enseignantPrincipale/profil/Profil';
 import ListeAffectionTheme from '../pages/enseignantPrincipale/listeGroupe/ListeAffectionTheme';
 import EditerGroupes from '../pages/enseignantPrincipale/listeGroupe/EditerGroupes';
-import Welcome from '../pages/enseignantPrincipale/welcome/Welcome';
+import Welcome from '../pages/enseignantPrincipale/welcome/WelcomeEnsP';
+
 
 
 const EnsPrincipaleRoutes = (
     <>
-        <Route path="/ens-principale" element={<LayoutEnsPrincipale />}>
+        <Route path="/ens-principale" element={ <LayoutEnsPrincipale />}>
             <Route path='' element={<Welcome />} />
             <Route path='creer-groupes' element={<CreerGroupe />} />
             <Route path='creer-groupes/liste-binomes' element={<ListeBinomes />} />

@@ -1,8 +1,24 @@
-import  { useState } from 'react'
+import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router';
 import { Input } from './SignUP';
 import { useEmailStore } from '../../store';
+import { useMutation } from '@tanstack/react-query';
 
+const sendOtpToEmail = async (email: string) => {
+    console.log("fetecheing : ", email)
+    const response = await fetch('http://localhost:4000/api/authentication/send-otp', {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({email})
+    })
+    if (!response.ok) {
+        throw new Error('Email not valid!')
+    }
+    return response.json();
+}
 const ForgotPassword = () => {
     const setEmailStore = useEmailStore((state) => state.setEmail);
     const navigate = useNavigate();
@@ -20,13 +36,23 @@ const ForgotPassword = () => {
     }
     const handleSubmitSearch = () => {
         if (validateEmail()) {
-            //path: password/confirm
-            setEmailStore(email);
-            navigate("/password/reset-email");
+            mutate(email)
+
         } else {
             setError(true);
         }
     }
+    const { mutate } = useMutation({
+        mutationFn: sendOtpToEmail,
+        onSuccess: () => {
+            setEmailStore(email);
+            navigate("/password/reset-email");
+        },
+        onError: (error) => {
+            setError(true)
+            console.warn("Warnnig : ", error)
+        }
+    })
     return (
         <main className='w-full h-svh flex justify-center items-center bg-[#f2f4f8]'>
             <div className='bg-white rounded-lg px-8 py-6 shadow w-xl'>

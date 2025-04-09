@@ -51,7 +51,6 @@ const allposts: Posts[] = [
         id: 5,
         content: "Football match was intense today! ⚽",
         date: new Date("2025-03-15T16:00:00Z"),
-        image: "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
         nbrComment: 25,
         nbrLike: 80,
     },

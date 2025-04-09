@@ -12,10 +12,12 @@ import ThreedStep from "../pages/enseignantResponsable/gestion/affection_cas/Thr
 import Compte from "../pages/enseignantResponsable/compte/Compte";
 import Chat from "../pages/enseignantResponsable/chat/Chat";
 import AllPost from "../pages/enseignantResponsable/post/AllPost";
+import { OrganiserRenion } from "../pages/enseignantResponsable/gestion/renion/OrganiserRenion";
+
 
 const EnsRespobsableRoutes = (
   <>
-    <Route path="/ens-res" element={<LayoutEns />}>
+    <Route path="/ens-responsable" element={<LayoutEns />}>
       <Route index element={<AllPost />} />
       <Route path="consultation-question" element={<Question />} />
       <Route path="consultation-binommes" element={<GroupeBinome />} />
@@ -35,6 +37,10 @@ const EnsRespobsableRoutes = (
         <Route path="step2" element={<SecondStep />} />
         <Route path="step3" element={<ThreedStep />} />
       </Route>
+      <Route
+        path="gestion-organiser-renion"
+        element={<OrganiserRenion />}
+      />
       <Route
         path="evaluation"
         element={<div className="w-full h-svh">evaluation</div>}

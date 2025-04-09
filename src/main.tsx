@@ -1,23 +1,17 @@
 import { createRoot } from "react-dom/client";
 import "./index.css";
-import { BrowserRouter, Route, Routes } from "react-router";
+import { BrowserRouter } from "react-router";
 import { StrictMode } from "react";
-import NotFound from "./pages/not found 404/NotFound.tsx";
-import AuthRoutes from "./routes/AuthRoutes.tsx";
-import EnsRespobsableRoutes from "./routes/EnsRespobsableRoutes.tsx";
-import EnsPrincipaleRoutes from "./routes/EnsPrincipaleRoutes.tsx";
-import AdminRoutes from "./routes/AdminRoutes.tsx";
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import App from "./App";
+const queryClient = new QueryClient()
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <BrowserRouter>
-      <Routes>
-        {AuthRoutes}
-        {AdminRoutes}
-        {EnsRespobsableRoutes}
-        {EnsPrincipaleRoutes}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </QueryClientProvider>
   </StrictMode>
 );

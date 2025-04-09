@@ -6,7 +6,29 @@ import { HiOutlineLogout } from "react-icons/hi";
 import { IoMenu } from "react-icons/io5";
 import { FaFacebookMessenger } from "react-icons/fa";
 import { HeaderContext } from "../context/headerContext";
+import { useAuthStore } from "../store";
+import { useMutation } from "@tanstack/react-query";
 
+import Cookies from "js-cookie";
+
+
+const logoutFn = async (accessToken: string) => {
+  const response = await fetch(
+    "http://localhost:4000/api/authentication/logout",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) throw new Error("Unauthorized to logout");
+
+  return response.json();
+
+}
 type NavBarItemProps = {
   to: string;
   children: React.ReactNode;
@@ -15,12 +37,12 @@ type NavBarItemProps = {
 //   return (
 //     <NavLink
 //       to={to}
-      // className={({ isActive }) =>
-      //   `block duration-300 transform ease-in-out transition-all px-2 py-1.5 lg:py-2 lg:px-4  ${isActive
-      //     ? " text-green-400  rounded-full font-medium"
-      //     : "text-white hover:text-green-400"
-      //   } `
-      // }
+// className={({ isActive }) =>
+//   `block duration-300 transform ease-in-out transition-all px-2 py-1.5 lg:py-2 lg:px-4  ${isActive
+//     ? " text-green-400  rounded-full font-medium"
+//     : "text-white hover:text-green-400"
+//   } `
+// }
 //     >
 //       {children}
 //     </NavLink>
@@ -30,19 +52,19 @@ function SideNavConsultation() {
   return (
     <ul className="absolute max-w-fit text-nowrap top-[3.3rem]  space-y-2   bg-gray-800 text-white *:hover:text-green-600 transform transition-all duration-300 ease-in-out rounded-lg shadow-lg p-4 z-[999]">
       <li>
-        <NavLink to="/ens-res">Consultation rapport</NavLink>
+        <NavLink to="/ens-responsable">Consultation rapport</NavLink>
       </li>
       <li>
-        <NavLink to="/ens-res/consultation-question">Consultation question</NavLink>
+        <NavLink to="/ens-responsable/consultation-question">Consultation question</NavLink>
       </li>
       <li>
-        <NavLink to="/ens-res">Consultation feedback</NavLink>
+        <NavLink to="/ens-responsable">Consultation feedback</NavLink>
       </li>
       <li>
-        <NavLink to="/ens-res/consultation-binommes">Consultation les binomes</NavLink>
+        <NavLink to="/ens-responsable/consultation-binommes">Consultation les binomes</NavLink>
       </li>
       <li>
-        <NavLink to="/ens-res">Consultation progression</NavLink>
+        <NavLink to="/ens-responsable">Consultation progression</NavLink>
       </li>
     </ul>
   );
@@ -51,13 +73,13 @@ function SideNavProgestion() {
   return (
     <ul className="absolute ax-w-fit text-nowrap top-[3.3rem]  space-y-2  bg-gray-800 text-white *:hover:text-green-600 transform transition-all duration-300 ease-in-out rounded-lg shadow-lg p-4 z-[999]">
       <li>
-        <NavLink to="/ens-res">les etapes</NavLink>
+        <NavLink to="/ens-responsable">les etapes</NavLink>
       </li>
       <li>
-        <NavLink to="/ens-res">les groupes </NavLink>
+        <NavLink to="/ens-responsable">les groupes </NavLink>
       </li>
       <li>
-        <NavLink to="/ens-res">les binomes </NavLink>
+        <NavLink to="/ens-responsable">les binomes </NavLink>
       </li>
     </ul>
   );
@@ -66,16 +88,16 @@ function SideNavGestion() {
   return (
     <ul className="absolute max-w-fit text-nowrap top-[3.3rem]  space-y-2  bg-gray-800 text-white *:hover:text-green-600 transform transition-all duration-300 ease-in-out rounded-lg shadow-lg  z-[999]  p-4">
       <li>
-        <NavLink to="/ens-res/gestion-decrir-le-sujet">Decrir le sujet</NavLink>
+        <NavLink to="/ens-responsable/gestion-decrir-le-sujet">Decrir le sujet</NavLink>
       </li>
       <li>
-        <NavLink to="/ens-res">Organiser renion</NavLink>
+        <NavLink to="/ens-responsable/gestion-organiser-renion">Organiser renion</NavLink>
       </li>
       <li>
-        <NavLink to="/ens-res/gestion-affection-les-cas">Affecter les cas</NavLink>
+        <NavLink to="/ens-responsable/gestion-affection-les-cas">Affecter les cas</NavLink>
       </li>
       <li>
-        <NavLink to="/ens-res/gestion-affection-responsabilite">Affecter responsabilite </NavLink>
+        <NavLink to="/ens-responsable/gestion-affection-responsabilite">Affecter responsabilite </NavLink>
       </li>
     </ul>
   );
@@ -84,13 +106,13 @@ function SideNavRport() {
   return (
     <ul className="absolute max-w-fit text-nowrap top-[3.3rem]  space-y-2  bg-gray-800 text-white *:hover:text-green-600 transform transition-all duration-300 ease-in-out rounded-lg shadow-lg p-4 z-[999]">
       <li>
-        <NavLink to="/ens-res">les taches</NavLink>
+        <NavLink to="/ens-responsable">les taches</NavLink>
       </li>
       <li>
-        <NavLink to="/ens-res">les etapes </NavLink>
+        <NavLink to="/ens-responsable">les etapes </NavLink>
       </li>
       <li>
-        <NavLink to="/ens-res">rapport final </NavLink>
+        <NavLink to="/ens-responsable">rapport final </NavLink>
       </li>
     </ul>
   );
@@ -99,10 +121,10 @@ function SideNavEvaluation() {
   return (
     <ul className="absolute max-w-fit text-nowrap top-[3.3rem]  space-y-2  bg-gray-800 text-white *:hover:text-green-600 transform transition-all duration-300 ease-in-out rounded-lg shadow-lg p-4 z-[999]">
       <li>
-        <NavLink to="/ens-res">partie theorique</NavLink>
+        <NavLink to="/ens-responsable">partie theorique</NavLink>
       </li>
       <li>
-        <NavLink to="/ens-res">les taches </NavLink>
+        <NavLink to="/ens-responsable">les taches </NavLink>
       </li>
     </ul>
   );
@@ -144,7 +166,7 @@ function Nav() {
 function Message() {
   return (
     <NavLink
-      to="/ens-res/chat"
+      to="/ens-responsable/chat"
       className="w-10 h-10 bg-gray-800 shrink-0 lg:w-12 lg:h-12 rounded-full md:bg-gray-400 flex items-center justify-center"
     >
       <FaFacebookMessenger className="font-bold text-2xl text-white" />
@@ -152,18 +174,37 @@ function Message() {
   );
 }
 function MenuProfile({ setIsOpen }: { setIsOpen: (value: boolean) => void }) {
+  const accessToken = useAuthStore((state) => state.accessToken)
+  const setAccessToken = useAuthStore((state) => state.setAccessToken)
+  const { mutate } = useMutation({
+    mutationFn: logoutFn,
+    onSuccess: () => {
+      setAccessToken('');
+      Cookies.remove("refreshToken");
+      sessionStorage.clear();
+    },
+    onError: (error) => {
+      console.warn("Unauthorized to log out", error)
+    }
+  })
+  const handleLogout = () => {
+    if (accessToken) {
+      mutate(accessToken);
+    }
+  };
   return (
     <div className="absolute top-16.5 -right-5 w-80 space-y-2  bg-gray-800 text-white  transform transition-all duration-300 ease-in-out rounded-lg shadow-lg p-4 z-[999]">
       <NavLink
         onClick={() => setIsOpen(false)}
-        to="/ens-res/compte"
+        to="/ens-responsable/compte"
         className="flex items-center gap-2 hover:bg-gray-100 hover:text-green-600 p-2 rounded-lg transform transition-all duration-300 ease-in-out"
       >
         <PiUserCircleDuotone className="text-xl" />
         <span>Compte</span>
       </NavLink>
       <NavLink
-        to="/"
+        onClick={handleLogout}
+        to="/sign-in"
         className="flex items-center gap-2 hover:bg-gray-100 hover:text-green-600 p-2 rounded-lg transform transition-all duration-300 ease-in-out"
       >
         <HiOutlineLogout className="text-xl" />
@@ -346,7 +387,7 @@ function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   return (
     <header className="w-full sm:h-20 flex justify-between items-center  py-1 bg-gray-800 text-white sm:px-4 md:pr-6 fixed top-0 z-50">
-      <NavLink to="/ens-res" className="bg-gray-800 sm:flex sm:items-center gap-4">
+      <NavLink to="/ens-responsable" className="bg-gray-800 sm:flex sm:items-center gap-4">
         <img
           src={logoImg}
           alt=""
@@ -388,49 +429,49 @@ function Footer() {
           <h2 className="font-semibold text-lg">Consultation</h2>
           <hr className="text-green-400 sm:w-[12.5rem]" />
           <nav className="flex flex-col gap-2 *:font-extralight">
-            <NavFooter to="/ens-res/consultation-binommes">Consultation les binomes</NavFooter>
-            <NavFooter to="/ens-res">Consultation rapport</NavFooter>
-            <NavFooter to="/ens-res/consultation-question">
+            <NavFooter to="/ens-responsable/consultation-binommes">Consultation les binomes</NavFooter>
+            <NavFooter to="/ens-responsable">Consultation rapport</NavFooter>
+            <NavFooter to="/ens-responsable/consultation-question">
               Consultation question
             </NavFooter>
-            <NavFooter to="/ens-res">Consultation feedback</NavFooter>
-            <NavFooter to="/ens-res">Consultation progression</NavFooter>
+            <NavFooter to="/ens-responsable">Consultation feedback</NavFooter>
+            <NavFooter to="/ens-responsable">Consultation progression</NavFooter>
           </nav>
         </div>
         <div className=" sm:basis-[12.5rem]  flex flex-col gap-4  rounded-lg">
           <h2 className="font-semibold text-lg">Rapport</h2>
           <hr className="text-green-400 sm:w-[12.5rem]" />
           <nav className="flex flex-col gap-2 *:font-extralight">
-            <NavFooter to="/ens-res">rapport les taches</NavFooter>
-            <NavFooter to="/ens-res">rapport les etapes</NavFooter>
-            <NavFooter to="/ens-res">rapport final</NavFooter>
+            <NavFooter to="/ens-responsable">rapport les taches</NavFooter>
+            <NavFooter to="/ens-responsable">rapport les etapes</NavFooter>
+            <NavFooter to="/ens-responsable">rapport final</NavFooter>
           </nav>
         </div>
         <div className="sm:basis-[12.5rem]  flex flex-col gap-4  rounded-lg">
           <h2 className="font-semibold text-lg">Progression</h2>
           <hr className="text-green-400 sm:w-[12.5rem]" />
           <nav className="flex flex-col gap-2 *:font-extralight">
-            <NavFooter to="/ens-res">Progression les etapes</NavFooter>
-            <NavFooter to="/ens-res">Progression les binomes</NavFooter>
-            <NavFooter to="/ens-res">rapport les groupes</NavFooter>
+            <NavFooter to="/ens-responsable">Progression les etapes</NavFooter>
+            <NavFooter to="/ens-responsable">Progression les binomes</NavFooter>
+            <NavFooter to="/ens-responsable">rapport les groupes</NavFooter>
           </nav>
         </div>
         <div className="sm:basis-[12.5rem]  flex flex-col gap-4  rounded-lg">
           <h2 className="font-semibold text-lg">Gestion</h2>
           <hr className="text-green-400 sm:w-[12.5rem]" />
           <nav className="flex flex-col gap-2 *:font-extralight">
-            <NavFooter to="/ens-res/gestion-affection-les-cas">Affecter les cas</NavFooter>
-            <NavFooter to="/ens-res/gestion-affection-responsabilite">Affecter responsabilite</NavFooter>
-            <NavFooter to="/ens-res/gestion-decrir-le-sujet">Decrir le sujet</NavFooter>
-            <NavFooter to="/ens-res">Organiser renion</NavFooter>
+            <NavFooter to="/ens-responsable/gestion-affection-les-cas">Affecter les cas</NavFooter>
+            <NavFooter to="/ens-responsable/gestion-affection-responsabilite">Affecter responsabilite</NavFooter>
+            <NavFooter to="/ens-responsable/gestion-decrir-le-sujet">Decrir le sujet</NavFooter>
+            <NavFooter to="/ens-responsable">Organiser renion</NavFooter>
           </nav>
         </div>
         <div className="sm:basis-[12.5rem] flex flex-col gap-4  rounded-lg">
           <h2 className="font-semibold text-lg">Evaluation</h2>
           <hr className="text-green-400 sm:w-[12.5rem]" />
           <nav className="flex flex-col gap-2 *:font-extralight">
-            <NavFooter to="/ens-res">Evaluation partie theorique</NavFooter>
-            <NavFooter to="/ens-res">Evaluation les taches</NavFooter>
+            <NavFooter to="/ens-responsable">Evaluation partie theorique</NavFooter>
+            <NavFooter to="/ens-responsable">Evaluation les taches</NavFooter>
           </nav>
         </div>
       </div>
