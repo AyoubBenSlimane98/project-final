@@ -7,6 +7,8 @@ import { HiAnnotation } from "react-icons/hi"
 import { useAuthStore } from "../store"
 import { useMutation } from "@tanstack/react-query"
 import Cookies from "js-cookie";
+import { IoMdArrowForward } from "react-icons/io"
+import { ImProfile } from "react-icons/im"
 
 
 const logoutFn = async (accessToken: string) => {
@@ -77,13 +79,14 @@ function Header() {
                 }>
                     <FaUsers className=" text-2xl" />  <span className="font-medium" >Gestion des utilisateurs</span>
                 </NavLink>
-                <NavLink to='/admin/parametre' className={({ isActive }) =>
-                    `basis-full flex items-center justify-baseline px-6 gap-3 duration-300 transform ease-in-out transition-all py-4 ${isActive
+
+                <NavLink to='/admin/profil' className={({ isActive }) =>
+                    `basis-full flex items-center justify-baseline gap-3 duration-300 px-6 transform ease-in-out transition-all py-4 ${isActive
                         ? " bg-[#4319FF] *:text-white rounded-md"
                         : "*:text-[#A3AED0] hover:bg-[#F4F7FD]"
                     } `
                 }>
-                    <IoSettings className=" text-xl" />  <span className="font-medium" >Paramètres</span>
+                    <ImProfile className=" text-2xl" />  <span className="font-medium" >Profil</span>
                 </NavLink>
             </div>
             <div className=" w-full   flex flex-col  justify-end px-6">

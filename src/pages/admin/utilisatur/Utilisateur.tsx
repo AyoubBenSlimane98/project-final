@@ -1,3 +1,4 @@
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
     useReactTable,
     getCoreRowModel,
@@ -7,120 +8,130 @@ import {
     getFilteredRowModel,
     getPaginationRowModel,
 } from "@tanstack/react-table";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BiSortAlt2 } from "react-icons/bi";
-import { FaSearch, FaUser, FaUserLock } from "react-icons/fa";
+import { FaSearch, } from "react-icons/fa";
 import { FaCircleUser, } from "react-icons/fa6";
 import { FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight } from "react-icons/fi";
-import { MdEmail } from "react-icons/md";
-
 import { RiDeleteBin5Fill } from "react-icons/ri";
-import { TbLockAccess } from "react-icons/tb";
+import { useAuthStore } from "../../../store";
 
-export type BinomesTypes = {
-    image?: string;
-    etudiantID: number;
-    fullName: string;
+
+
+const getAllUsers = async (accessToken: string) => {
+    const response = await fetch('http://localhost:4000/api/admin/all-users', {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to get all users');
+    }
+
+    return response.json();
+}
+const deleteUser = async ({ email, accessToken }: { accessToken: string, email: string }) => {
+    console.log({ email, accessToken })
+    const response = await fetch('http://localhost:4000/api/admin/user', {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify( {email })
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to delete user');
+    }
+
+    return response.json();
+}
+
+type User = {
     email: string;
-    matricule: number;
-    groupe: number;
+    nom: string;
+    prenom: string;
+    role: 'etudiant' | 'enseignant' | 'admin';
 };
-
 export type ColumnSort = {
     id: string;
     desc: boolean;
 };
 export type SortingState = ColumnSort[];
 
-const generateRandomBinomes = (count: number): BinomesTypes[] => {
-    const names = ["Ayyoub Benslimane", "Amira Manaer", "Karim Belhadj", "Nadia Saidi", "Mohamed Chibane", "Leila Hamidi", "Walid Zeroual", "Sonia Khelifi", "Hakim Benyahia", "Yasmine Lounis"];
-    const domains = ["gmail.com", "yahoo.com", "outlook.com"];
-    const binomes: BinomesTypes[] = [];
-
-    for (let i = 1; i <= count; i++) {
-        const name = names[Math.floor(Math.random() * names.length)];
-        const email = name.toLowerCase().replace(" ", "_") + "@" + domains[Math.floor(Math.random() * domains.length)];
-        const matricule = 212234520000 + i;
-        const groupe = Math.floor(Math.random() * 10) + 1; // Groups from 1 to 10
-
-        binomes.push({
-            etudiantID: i,
-            fullName: name,
-            email,
-            matricule,
-            groupe,
-        });
-    }
-    return binomes;
-};
-
-const list_binome: BinomesTypes[] = generateRandomBinomes(100);
-
 const Utilisateur = () => {
-    const columnHelper = createColumnHelper<BinomesTypes>();
+    const accessToken = useAuthStore((state) => state.accessToken)
+    const { data: usersData, refetch } = useQuery({
+        queryKey: ["users", accessToken],
+        queryFn: ({ queryKey }) => getAllUsers(queryKey[1] as string),
+        enabled: !!accessToken,
+    })
+
+    const columnHelper = createColumnHelper<User>();
     const [sorting, setSorting] = useState<SortingState>([]);
     const [globalFilter, setGlobalFilter] = useState('');
-    const [selectorUser, setSelectorUser] = useState<BinomesTypes | undefined>();
+    const [selectorUser, setSelectorUser] = useState<User | undefined>();
 
     const [isopen, setIsopen] = useState<boolean>(false);
     const [pagination, setPagination] = useState({
         pageIndex: 0,
         pageSize: 10,
     });
-    const [data, setData] = useState<BinomesTypes[]>(list_binome);
+    const [data, setData] = useState<User[]>([]);
 
 
     const columns = [
-        columnHelper.accessor('etudiantID', {
-            cell: (info) => info.getValue(),
-            header: () => (
-                <span className="flex items-center text-white font-medium ">
-                    <FaUser className="mr-2 " /> ID
+        columnHelper.display({
+            cell: (row) => row.row.index + 1,
+            header: "#"
+        }),
+        columnHelper.accessor(row => `${row.nom} ${row.prenom}`, {
+            id: "fullName",
+            cell: (info) => (
+                <span className="flex items-center">
+                    <FaCircleUser className="mr-2 text-xl" />
+                    {info.getValue()}
                 </span>
             ),
-        }),
-        columnHelper.accessor('matricule', {
-            cell: (info) => info.getValue(),
             header: () => (
                 <span className="flex items-center text-white font-medium text-nowrap">
-                    <FaUserLock className="mr-2 text-xl" /> Nom d'utilisateur
+                    Nom et Prénom
                 </span>
             ),
         }),
-        columnHelper.accessor('fullName', {
-            cell: (info) => info.getValue(),
-            header: () => (
-                <span className="font-medium text-white flex items-center text-nowrap ">
-                    <FaCircleUser className="mr-2 text-xl" /> Nom et Prénom
-                </span>
-            ),
-        }),
-        columnHelper.accessor('email', {
+        columnHelper.accessor("email", {
             id: 'email',
             cell: (info) => (
                 <span className="italic text-blue-600">{info.getValue() as string} </span>
             ),
             header: () => (
                 <span className="flex items-center text-white font-medium">
-                    <MdEmail className="mr-2 text-xl" /> Email
+                    Email
                 </span>
             ),
         }),
-        columnHelper.accessor('groupe', {
-            cell: (info) => info.getValue(),
+        columnHelper.accessor("role", {
+            cell: (info) => (
+                <span className="italic text-blue-600">{info.getValue().toLocaleUpperCase()} </span>
+            ),
             header: () => (
-                <span className="font-medium text-white flex items-center ">
-                    <TbLockAccess className="mr-2 text-xl" /> Rôle
+                <span className="flex items-center text-white font-medium">
+                    Role
                 </span>
             ),
         }),
+
         columnHelper.display(
             {
                 id: "delete",
                 cell: ({ row }) => (
                     <div
                         className="w-full  flex items-center justify-center pl-2"
-                        onClick={() => { setSelectorUser(row.original as BinomesTypes); setIsopen(true); }}
+                        onClick={() => { setSelectorUser(row.original); setIsopen(true); }}
                     >
                         <RiDeleteBin5Fill className="mr-2 text-xl text-red-400 hover:text-red-600 " />
                     </div>
@@ -146,10 +157,26 @@ const Utilisateur = () => {
         getPaginationRowModel: getPaginationRowModel(),
     });
 
-    const deleteRow = () => {
-        setData(prevData => prevData.filter(row => row.etudiantID !== selectorUser?.etudiantID));
-        setIsopen(false);
-    };
+    const { mutate } = useMutation({
+        mutationFn: ({ email, accessToken }: { accessToken: string, email: string }) => deleteUser({ email, accessToken }),
+        onSuccess: (data) => {
+            console.log(data)
+            setIsopen(false)
+            refetch()
+        },
+        onError: (error) => {
+            console.warn(error)
+        }
+    })
+
+    const deleteFn = () => {
+        if (selectorUser && accessToken) { mutate({ email: selectorUser.email, accessToken }) }
+    }
+    useEffect(() => {
+        if (usersData) {
+            setData(usersData)
+        }
+    }, [usersData])
     return (
         <main className="flex flex-col h-svh w-full mx-auto py-10 px-4 sm:px-6 lg:px-8  bg-[#F4F7FD]  relative ">
 
@@ -269,15 +296,16 @@ const Utilisateur = () => {
                     <div className="mb-6">
                         <h2 className=" font-medium text-xl mb-2">Voulez-vous vraiment supprimer cet utilisateur  ?</h2>
                         <div className="flex flex-col px-6 font-serif ">
-                            <p>Nom et Pernom : <span className="text-blue-600">{selectorUser?.fullName}</span></p>
-                            <p>Email : <span className="text-blue-600">{selectorUser?.email}</span></p>
+                            <p className="pb-1">Email : <span className="text-blue-600">{selectorUser?.email}</span></p>
+                            <p>Nom et Pernom : <span className="text-blue-600">{selectorUser?.nom} {selectorUser?.prenom}</span></p>
+
                         </div>
                     </div>
                     <div className="w-full flex items-center justify-center gap-x-6 ">
                         <button className="outline-none w-44  border border-gray-400 text-black hover:bg-gray-950 rounded-md py-1.5 hover:text-white font-medium transform duration-200 ease-in-out transition-all cursor-pointer" onClick={() => { setIsopen(false); }} >
                             Annuler
                         </button>
-                        <button className="outline-none w-44 border-none  bg-red-500 hover:bg-red-700 rounded-md py-1.5 text-white font-medium transform duration-200 ease-in-out transition-all cursor-pointer" onClick={deleteRow}  >
+                        <button className="outline-none w-44 border-none  bg-red-500 hover:bg-red-700 rounded-md py-1.5 text-white font-medium transform duration-200 ease-in-out transition-all cursor-pointer" onClick={deleteFn}  >
                             supprimer
                         </button>
                     </div>

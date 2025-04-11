@@ -5,8 +5,6 @@ import Welcome from "./pages/admin/welcome/Welcome";
 import AjouterAnnonces from "./pages/admin/ajouter_annonces/AjouterAnnonces";
 import { ConsulterAnnonces } from "./pages/admin/Consulter_annonces/ConsulterAnnonces";
 import Utilisateur from "./pages/admin/utilisatur/Utilisateur";
-import Parametre from "./pages/admin/parametres/Parametre";
-import AnnoncesBloque from "./pages/admin/Consulter_annonces/AnnoncesBloque";
 import Compte from "./pages/admin/compte/Compte";
 
 import LayoutEnsPrincipale from './layouts/LayoutEnsPrincipale';
@@ -47,9 +45,9 @@ import ResetEmail from "./pages/auth/ResetEmail";
 import PrivateRoute from "./routes/PrivateRoute";
 import WelcomeEnsP from "./pages/enseignantPrincipale/welcome/WelcomeEnsP";
 import ChangePassword from "./pages/auth/ChangePassword";
+import { useTokenRefresher } from "./hooks/useTokenRefresher";
 const App = () => {
-
-
+    useTokenRefresher()
     return (
         <Routes>
             <Route path="/" element={<Navigate to="/sign-in" />} />
@@ -61,14 +59,12 @@ const App = () => {
                 <Route path="change" element={<ChangePassword />} />
             </Route>
 
-            <Route path="/admin" element={<PrivateRoute><LayoutAdmin /></PrivateRoute>}>
+            <Route path="/admin" element={<LayoutAdmin />}>
                 <Route index element={<Welcome />} />
                 <Route path="ajouter-annoces" element={<AjouterAnnonces />} />
                 <Route path="annonces" element={<ConsulterAnnonces />} />
                 <Route path="utilisateurs" element={<Utilisateur />} />
-                <Route path="parametre" element={<Parametre />} />
-                <Route path="parametre/annonces-bloque" element={<AnnoncesBloque />} />
-                <Route path="parametre/profil" element={<Compte />} />
+                <Route path="profil" element={<Compte />} />
             </Route>
 
             <Route path="/ens-principale" element={<PrivateRoute><LayoutEnsPrincipale /></PrivateRoute>}>

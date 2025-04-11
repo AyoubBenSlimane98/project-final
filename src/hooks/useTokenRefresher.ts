@@ -1,16 +1,16 @@
-
 import { useEffect } from "react";
-import { useNavigate } from "react-router";
 import Cookies from "js-cookie";
 import { useAuthStore } from "../store";
 
 export const useTokenRefresher = () => {
-  const navigate = useNavigate();
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const refreshAccessToken = async () => {
       const refreshToken = Cookies.get("refreshToken");
+      if (!refreshToken) return;
 
       try {
         const response = await fetch(
@@ -21,6 +21,7 @@ export const useTokenRefresher = () => {
               Authorization: `Bearer ${refreshToken}`,
               "Content-Type": "application/json",
             },
+            signal: controller.signal,
           }
         );
 
@@ -35,16 +36,20 @@ export const useTokenRefresher = () => {
           sameSite: "Strict",
         });
       } catch (error) {
-        console.warn("Error refreshing token:", error);
-        sessionStorage.clear();
-        Cookies.remove("refreshToken");
-
+        if (error instanceof Error && error.name !== "AbortError") {
+          console.warn("Error refreshing token:", error);
+          sessionStorage.clear();
+          Cookies.remove("refreshToken");
+        }
       }
     };
 
-    const interval = setInterval(refreshAccessToken, 14 * 60 * 1000);
-    refreshAccessToken();
+    const interval = setInterval(refreshAccessToken, 14 * 60 * 1000); // every 14 minutes
+    refreshAccessToken(); // initial call on mount
 
-    return () => clearInterval(interval);
-  }, [setAccessToken, navigate]);
+    return () => {
+      clearInterval(interval);
+      controller.abort(); // cleanup fetch if needed
+    };
+  }, [setAccessToken]);
 };

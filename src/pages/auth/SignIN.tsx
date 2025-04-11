@@ -5,6 +5,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa6";
 import { NavLink, useNavigate } from "react-router";
 import { useAuthStore } from "../../store";
 
+
 type formPros = {
     email: string;
     password: string;
@@ -12,6 +13,7 @@ type formPros = {
 };
 
 const loginFn = async (form: { email: string, password: string }) => {
+    console.log(form)
     const response = await fetch('http://localhost:4000/api/authentication/sign-in', {
         method: "POST",
         headers: {
