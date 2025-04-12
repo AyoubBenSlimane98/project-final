@@ -105,13 +105,7 @@ const AjouterAnnonces = () => {
     }
     return (
         <main className="w-full p-6 flex flex-col mx-auto items-center justify-center gap-2 bg-[#F4F7FD]">
-            {/* {uploadedImageUrl && (
-                <img
-                    src={`http://localhost:4000/${uploadedImageUrl}`} // Adjust URL based on your server configuration
-                    alt="Uploaded Image"
-                    className="h-48 w-auto rounded-md shadow-lg"
-                />
-            )} */}
+
             <div className="w-2xl border border-gray-200 rounded-md px-8 pb-8 pt-6 flex flex-col shadow shadow-gray-200 bg-white">
 
                 <label htmlFor="" className="mb-4">

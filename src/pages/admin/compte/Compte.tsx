@@ -160,10 +160,14 @@ function AboutMe({ dataProfil, accessToken, refetch }: MyProfileProps) {
       <div className="flex items-center space-x-6">
         <div className=" shrink-0 w-24 h-24 relative">
           <img
-            src={`http://localhost:4000/${user?.image}`
-            }
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.onerror = null;
+              target.src = 'https://scontent.fczl2-2.fna.fbcdn.net/v/t1.30497-1/453178253_471506465671661_2781666950760530985_n.png?stp=dst-png_s480x480&_nc_cat=1&ccb=1-7&_nc_sid=136b72&_nc_eui2=AeF_OWSBlL4_ahZGK8uktg7YWt9TLzuBU1Ba31MvO4FTUAcNr-rcAk0Q6wgee_n1MVfJVXKEYXEpVc_A8npzsuDs&_nc_ohc=pCF_EXqQ5MYQ7kNvwGqbQH8&_nc_oc=AdmOQDv_qA9yPoDAQK2j4m8cM77HYt2osPaGYZiWQNIR41-_Kkg1lN_m_n79WacUl90&_nc_zt=24&_nc_ht=scontent.fczl2-2.fna&oh=00_AfEfE4VyUFM1gD2VkajBmRMamhtVSp2NpcihUNDqLsAtzg&oe=681B903A';
+            }}
+            src={`http://localhost:4000/${user?.image}`}
             alt={`${user?.prenom} ${user?.nom}`}
-            className="w-24 h-24 rounded-full object-cover border border-gray-200 outline-none "
+            className="w-24 h-24 rounded-full object-cover border border-gray-200 outline-none"
             loading="lazy"
           />
           {isEditing && (
@@ -338,7 +342,7 @@ function MyPassword({ accessToken, refetch, setIsSucces }: {
         setData({ oldPassword: '', newPassword: '', confirmPassword: '' })
         setIsSucces(false)
       }, 4000)
-      
+
       refetch()
     },
     onError: (error) => {

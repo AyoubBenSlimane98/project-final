@@ -118,8 +118,7 @@ function PostItem({ post, setIsUpdate, setUpdatePost, setIsDelete }: MyPostItemp
     })
 
     const [isOpen, setIsOpen] = useState<boolean>(false);
-    // const { blockPost, blockedPosts, setPostToDelete, setUpdatePosts, } = useAnnocesContext();
-    const defaultImage = 'https://scontent.fczl2-2.fna.fbcdn.net/v/t1.30497-1/453178253_471506465671661_2781666950760530985_n.png?stp=dst-png_s480x480&_nc_cat=1&ccb=1-7&_nc_sid=136b72&_nc_eui2=AeF_OWSBlL4_ahZGK8uktg7YWt9TLzuBU1Ba31MvO4FTUAcNr-rcAk0Q6wgee_n1MVfJVXKEYXEpVc_A8npzsuDs&_nc_ohc=pCF_EXqQ5MYQ7kNvwGqbQH8&_nc_oc=AdmOQDv_qA9yPoDAQK2j4m8cM77HYt2osPaGYZiWQNIR41-_Kkg1lN_m_n79WacUl90&_nc_zt=24&_nc_ht=scontent.fczl2-2.fna&oh=00_AfEfE4VyUFM1gD2VkajBmRMamhtVSp2NpcihUNDqLsAtzg&oe=681B903A';
+
 
     const isoDate = post.createdAt
     const date = new Date(isoDate);
@@ -128,7 +127,14 @@ function PostItem({ post, setIsUpdate, setUpdatePost, setIsDelete }: MyPostItemp
         <section className='w-2xl h-auto bg-white flex flex-col rounded-md shadow relative'>
             <header className="flex items-center justify-between pl-4 pr-2 py-4">
                 <div className="flex items-center gap-4">
-                    <img src={data?.image === defaultImage ? defaultImage : `http://localhost:4000/${data?.image}`} alt="" className="w-14 h-14 object-cover rounded-full border border-gray-200" loading="lazy" />
+                    <img onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null;
+                        target.src = 'https://scontent.fczl2-2.fna.fbcdn.net/v/t1.30497-1/453178253_471506465671661_2781666950760530985_n.png?stp=dst-png_s480x480&_nc_cat=1&ccb=1-7&_nc_sid=136b72&_nc_eui2=AeF_OWSBlL4_ahZGK8uktg7YWt9TLzuBU1Ba31MvO4FTUAcNr-rcAk0Q6wgee_n1MVfJVXKEYXEpVc_A8npzsuDs&_nc_ohc=pCF_EXqQ5MYQ7kNvwGqbQH8&_nc_oc=AdmOQDv_qA9yPoDAQK2j4m8cM77HYt2osPaGYZiWQNIR41-_Kkg1lN_m_n79WacUl90&_nc_zt=24&_nc_ht=scontent.fczl2-2.fna&oh=00_AfEfE4VyUFM1gD2VkajBmRMamhtVSp2NpcihUNDqLsAtzg&oe=681B903A'
+                    }}
+                        src={`http://localhost:4000/${data?.image}`}
+                        alt="" className="w-14 h-14 object-cover rounded-full border border-gray-200"
+                        loading="lazy" />
                     <div>
                         <h2 className="text-lg pb-1">{data?.bio}</h2>
                         <p className="text-[12px] font-mono">{formatted}</p>

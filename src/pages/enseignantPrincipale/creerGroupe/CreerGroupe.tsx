@@ -23,7 +23,7 @@ const CreerGroupe = () => {
 
                 <div className="w-full px-10 mb-4">
                     <h2 className="font-medium text-lg">
-                        Entrez le nombre de binome que vous souhaitez dans le groupe créé :
+                        Entrez le nombre de binome que vous souhaitez dans une groupe créé :
                     </h2>
                 </div>
 
