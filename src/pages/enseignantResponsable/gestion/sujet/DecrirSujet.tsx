@@ -3,9 +3,37 @@ import { FaUserEdit } from "react-icons/fa";
 import { HiViewGridAdd } from "react-icons/hi";
 import { MdAddLink } from "react-icons/md";
 import { RiDeleteBin5Fill, RiSave3Line } from "react-icons/ri";
-import { useSujetStore } from "../../../../store";
+import { useAuthStore, useSujetStore } from "../../../../store";
 import { useShallow } from "zustand/shallow";
+import { useMutation } from "@tanstack/react-query";
 
+export type ReferenceSujet = {
+    reference: string;
+}
+export type PrerequisSujet = {
+    prerequis: string;
+}
+export type CreateSujet = {
+    titre: string;
+    description: string;
+    references?: ReferenceSujet[];
+    prerequises?: PrerequisSujet[];
+}
+
+const createdSujet = async ({ accessToken, createSujet }: { accessToken: string, createSujet: CreateSujet }) => {
+    console.log('api : ', { accessToken, ...createSujet })
+    const response = await fetch('http://localhost:4000/api/responsable/sujet', {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ ...createSujet })
+
+    })
+    if (!response.ok) throw new Error("feild to accest to api ")
+    return response.json()
+}
 function CardInfoRef({ name }: { name: string }) {
     const [isEdit, setIsEdit] = useState<boolean>(false);
 
@@ -63,15 +91,16 @@ function CardInfoPrerquis({ name }: { name: string }) {
 }
 
 const DecrirSujet = () => {
-    const { AddNom, addDescription, addReference, addPrerequis, prerequis, references, resetAll } = useSujetStore(
+    const accessToken = useAuthStore((state) => state.accessToken);
+    const { AddNom, addDescription, addReference, addPrerequis, prerequisInputSuject, refInputSuject, resetAll } = useSujetStore(
         useShallow((state) => ({
             AddNom: state.addNom,
             addDescription: state.addDescription,
             addReference: state.addReference,
             addPrerequis: state.addPrerequis,
             resetAll: state.resetAll,
-            prerequis: state.prerequis,
-            references: state.references,
+            prerequisInputSuject: state.prerequisInputSuject,
+            refInputSuject: state.refInputSuject,
         }))
     );
     const [form, setForm] = useState<{ nom: string; description: string }>({ nom: '', description: '' });
@@ -85,6 +114,24 @@ const DecrirSujet = () => {
         addDescription(form.description);
         AddNom(form.nom);
     }, [form, addDescription, AddNom]);
+
+    const { mutate } = useMutation({
+        mutationFn: ({ accessToken, createSujet }: { accessToken: string, createSujet: CreateSujet }) => createdSujet({ accessToken, createSujet }),
+        onSuccess: (data) => {
+            console.log(data)
+            resetAll()
+            setForm({ nom: '', description: '' })
+        },
+        onError: (error) => {
+            console.warn(error)
+        }
+    })
+    const handleSumit = () => {
+
+        if (accessToken) {
+            mutate({ accessToken, createSujet: { titre: form.nom, description: form.description, references: refInputSuject.map(ref => ({ reference: ref })), prerequises: prerequisInputSuject.map(prerequis => ({ prerequis })) } })
+        }
+    }
     return (
 
         <main className="w-full h-full md:h-svh mt-20 p-6 flex flex-col mx-auto items-center gap-y-6 lg:mt-26  ">
@@ -104,7 +151,7 @@ const DecrirSujet = () => {
                             <input
                                 onChange={handleChange}
                                 value={form.nom}
-                                name="nom" 
+                                name="nom"
                                 type="text"
                                 placeholder="Entrez le nom du projet"
                                 className="w-full py-1.5 px-4 border border-gray-400 outline-none rounded-md placeholder:text-sm focus:border-2 focus:border-sky-600 focus:outline-2 focus:outline-sky-600 transform duration-200 ease-in transition-all"
@@ -115,7 +162,7 @@ const DecrirSujet = () => {
                             <textarea
                                 onChange={handleChange}
                                 value={form.description}
-                                name="description" 
+                                name="description"
                                 placeholder="Écrire le contenu de la description ici ..."
                                 id="description"
                                 className="w-full px-4 py-2 border border-gray-400 outline-none rounded-md placeholder:text-sm focus:border-2 h-40 text-sm text-justify focus:border-sky-600 focus:outline-2 focus:outline-sky-600 transform duration-200 ease-in transition-all"
@@ -137,8 +184,8 @@ const DecrirSujet = () => {
                                 <MdAddLink className="text-xl text-blue-600" />
                             </div>
                         </div>
-                        {references.length > 0 && <div className=" w-full h-48  p-2 overflow-hidden flex flex-col gap-y-2 border border-gray-200 rounded-md hover:overflow-auto hover:bg-gray-50  cursor-pointer ">
-                            {references.map((ref, index) => <CardInfoRef key={index} name={ref} />)}
+                        {refInputSuject.length > 0 && <div className=" w-full h-48  p-2 overflow-hidden flex flex-col gap-y-2 border border-gray-200 rounded-md hover:overflow-auto hover:bg-gray-50  cursor-pointer ">
+                            {refInputSuject.map((ref, index) => <CardInfoRef key={index} name={ref} />)}
                         </div>}
                     </div>
                 </section>
@@ -156,8 +203,8 @@ const DecrirSujet = () => {
                                 <HiViewGridAdd className="text-xl text-green-600" />
                             </div>
                         </div>
-                        {prerequis.length > 0 && <div className=" w-full h-48  p-2 overflow-hidden flex flex-col gap-y-2 border border-gray-200 rounded-md hover:overflow-auto hover:bg-gray-50 cursor-pointer ">
-                            {prerequis.map((prev, index) => <CardInfoPrerquis key={index} name={prev} />)}
+                        {prerequisInputSuject.length > 0 && <div className=" w-full h-48  p-2 overflow-hidden flex flex-col gap-y-2 border border-gray-200 rounded-md hover:overflow-auto hover:bg-gray-50 cursor-pointer ">
+                            {prerequisInputSuject.map((prev: string, index: number) => <CardInfoPrerquis key={index} name={prev} />)}
                         </div>}
                     </div>
                 </section>
@@ -165,7 +212,7 @@ const DecrirSujet = () => {
             </section>
 
             <div className="w-full  py-4 flex items-center justify-center gap-x-6 ">
-                <button className=" outline-none w-60 bg-blue-500 hover:bg-blue-700 rounded-md py-1.5 text-white font-medium transform duration-200 ease-in-out transition-all cursor-pointer">créer</button>
+                <button className=" outline-none w-60 bg-blue-500 hover:bg-blue-700 rounded-md py-1.5 text-white font-medium transform duration-200 ease-in-out transition-all cursor-pointer" onClick={handleSumit}>créer</button>
                 <button className=" outline-none w-60 bg-red-500 hover:bg-red-700  rounded-md py-1.5 text-white font-medium transform duration-200 ease-in-out transition-all cursor-pointer" onClick={() => { resetAll(); setForm({ nom: '', description: '' }) }}>Annuler</button>
             </div>
         </main>

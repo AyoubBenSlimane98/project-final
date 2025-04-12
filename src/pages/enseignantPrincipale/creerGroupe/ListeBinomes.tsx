@@ -33,6 +33,8 @@ export type BinomeWithStudents = {
         prenom: string;
         email: string;
         matricul: string;
+        sexe: "Female" | "Male";
+        dateNaissance: string;
     };
     Etudaint2: {
         id: number;
@@ -40,6 +42,8 @@ export type BinomeWithStudents = {
         prenom: string;
         email: string;
         matricul: string;
+        sexe: "Female" | "Male";
+        dateNaissance: string;
     } | null;
 };
 
@@ -49,6 +53,7 @@ export type BinomeTableRow = {
     fullName: string;
     email: string;
     matricule: string;
+    sexe: "Male" | "Female";
 };
 
 const customFilterFn = <T,>(row: Row<T>, columnId: string, filterValue: string) => {
@@ -82,12 +87,7 @@ const ListeBinomes = () => {
             cell: (info) => info.getValue(),
             header: () => <span className="text-lg">#</span>,
         }),
-        columnHelper.accessor("matricule", {
-            cell: (info) => info.getValue(),
-            header: () => <span className="text-white font-medium">Matricule</span>,
-            sortingFn: customSortingFn,
-            filterFn: customFilterFn,
-        }),
+        
         columnHelper.accessor("fullName", {
             cell: (info) => info.getValue(),
             header: () => <span className="text-white font-medium">Nom et Prénom</span>,
@@ -99,6 +99,20 @@ const ListeBinomes = () => {
                 <span className="italic text-blue-600">{info.getValue()}</span>
             ),
             header: () => <span className="text-white font-medium">Email</span>,
+            sortingFn: customSortingFn,
+            filterFn: customFilterFn,
+        }),
+        columnHelper.accessor("matricule", {
+            cell: (info) => info.getValue(),
+            header: () => <span className="text-white font-medium">Matricule</span>,
+            sortingFn: customSortingFn,
+            filterFn: customFilterFn,
+        }),
+        columnHelper.accessor("sexe", {
+            cell: (info) => (
+                <span className="italic text-blue-600">{info.getValue()}</span>
+            ),
+            header: () => <span className="text-white font-medium">Sexe</span>,
             sortingFn: customSortingFn,
             filterFn: customFilterFn,
         }),
@@ -121,6 +135,7 @@ const ListeBinomes = () => {
                         fullName: `${binome.Etudaint1.nom} ${binome.Etudaint1.prenom}`,
                         email: binome.Etudaint1.email,
                         matricule: binome.Etudaint1.matricul,
+                        sexe: binome.Etudaint1.sexe
                     });
                 }
 
@@ -130,6 +145,7 @@ const ListeBinomes = () => {
                         fullName: `${binome.Etudaint2.nom} ${binome.Etudaint2.prenom}`,
                         email: binome.Etudaint2.email,
                         matricule: binome.Etudaint2.matricul,
+                        sexe: binome.Etudaint2.sexe
                     });
                 }
 

@@ -5,8 +5,8 @@ import { immer } from "zustand/middleware/immer";
 export type SujetState = {
   nom: string;
   description: string;
-  references: string[];
-  prerequis: string[];
+  refInputSuject: string[];
+  prerequisInputSuject: string[];
 };
 
 export type ActionsSujet = {
@@ -27,43 +27,52 @@ export const useSujetStore = create<SujetState & ActionsSujet>()(
       immer((set) => ({
         nom: "",
         description: "",
-        references: [],
-        prerequis: [],
+        refInputSuject: [],
+        prerequisInputSuject: [],
 
         addNom: (nom) => set({ nom }),
         addDescription: (description) => set({ description }),
 
         addReference: (ref) =>
           set((state) => {
-            state.references.push(ref);
+            state.refInputSuject.push(ref);
           }),
 
         addPrerequis: (prev) =>
           set((state) => {
-            state.prerequis.push(prev);
+            state.prerequisInputSuject.push(prev);
           }),
 
         updateReference: (oldRef, newRef) =>
           set((state) => {
-            const index = state.references.indexOf(oldRef);
-            if (index !== -1) state.references[index] = newRef;
+            const index = state.refInputSuject.indexOf(oldRef);
+            if (index !== -1) state.refInputSuject[index] = newRef;
           }),
 
         updatePrerequis: (oldPrereq, newPrereq) =>
           set((state) => {
-            const index = state.prerequis.indexOf(oldPrereq);
-            if (index !== -1) state.prerequis[index] = newPrereq;
+            const index = state.prerequisInputSuject.indexOf(oldPrereq);
+            if (index !== -1) state.prerequisInputSuject[index] = newPrereq;
           }),
         deleteReference: (ref: string) =>
           set((state) => {
-            state.references = state.references.filter((item) => item !== ref);
+            state.refInputSuject = state.refInputSuject.filter(
+              (item) => item !== ref
+            );
           }),
         deletePrerequis: (prev: string) =>
           set((state) => {
-            state.prerequis = state.prerequis.filter((item) => item !== prev);
+            state.prerequisInputSuject = state.prerequisInputSuject.filter(
+              (item) => item !== prev
+            );
           }),
         resetAll: () =>
-          set({ nom: "", description: "", references: [], prerequis: [] }),
+          set({
+            nom: "",
+            description: "",
+            refInputSuject: [],
+            prerequisInputSuject: [],
+          }),
       })),
       {
         name: "sujetStore",
