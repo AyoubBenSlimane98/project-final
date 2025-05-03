@@ -88,8 +88,8 @@ function Header() {
                 }>
                     <ImProfile className=" text-2xl" />  <span className="font-medium" >Profil</span>
                 </NavLink>
-            </div>
-            <div className=" w-full   flex flex-col  justify-end px-6">
+
+
                 <NavLink to='/' className={
                     ` flex items-center justify-baseline px-6 gap-3 duration-300 transform ease-in-out transition-all py-4 text-[#A3AED0]  hover:bg-red-500 hover:text-white rounded-md
                     } `

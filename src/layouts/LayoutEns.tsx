@@ -4,13 +4,29 @@ import logoImg from "../assets/logos-Photoroom.jpg";
 import { PiUserCircleDuotone } from "react-icons/pi";
 import { HiOutlineLogout } from "react-icons/hi";
 import { IoMenu } from "react-icons/io5";
-import { FaFacebookMessenger } from "react-icons/fa";
 import { HeaderContext } from "../context/headerContext";
 import { useAuthStore } from "../store";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 import Cookies from "js-cookie";
+import { useShallow } from "zustand/shallow";
 
+
+const getProfil = async (accessToken: string) => {
+  const response = await fetch('http://localhost:4000/api/principal/profil', {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to get all articles');
+  }
+
+  return response.json();
+}
 
 const logoutFn = async (accessToken: string) => {
   const response = await fetch(
@@ -33,21 +49,7 @@ type NavBarItemProps = {
   to: string;
   children: React.ReactNode;
 };
-// function NavBarItem({ to, children }: NavBarItemProps) {
-//   return (
-//     <NavLink
-//       to={to}
-// className={({ isActive }) =>
-//   `block duration-300 transform ease-in-out transition-all px-2 py-1.5 lg:py-2 lg:px-4  ${isActive
-//     ? " text-green-400  rounded-full font-medium"
-//     : "text-white hover:text-green-400"
-//   } `
-// }
-//     >
-//       {children}
-//     </NavLink>
-//   );
-// }
+
 function SideNavConsultation() {
   return (
     <ul className="absolute max-w-fit text-nowrap top-[3.3rem]  space-y-2   bg-gray-800 text-white *:hover:text-green-600 transform transition-all duration-300 ease-in-out rounded-lg shadow-lg p-4 z-[999]">
@@ -99,6 +101,9 @@ function SideNavGestion() {
       <li>
         <NavLink to="/ens-responsable/gestion-affection-responsabilite">Affecter responsabilite </NavLink>
       </li>
+      <li>
+        <NavLink to="/ens-responsable/gestion-preciser-cas">Preciser les cas </NavLink>
+      </li>
     </ul>
   );
 }
@@ -117,18 +122,7 @@ function SideNavRport() {
     </ul>
   );
 }
-function SideNavEvaluation() {
-  return (
-    <ul className="absolute max-w-fit text-nowrap top-[3.3rem]  space-y-2  bg-gray-800 text-white *:hover:text-green-600 transform transition-all duration-300 ease-in-out rounded-lg shadow-lg p-4 z-[999]">
-      <li>
-        <NavLink to="/ens-responsable">partie theorique</NavLink>
-      </li>
-      <li>
-        <NavLink to="/ens-responsable">les taches </NavLink>
-      </li>
-    </ul>
-  );
-}
+
 
 function Nav() {
   const context = useContext(HeaderContext);
@@ -137,7 +131,9 @@ function Nav() {
     <nav
       className="hidden md:flex h-20 md:items-center md:gap-4  ml-14"
     >
+      <NavLink to="/ens-responsable/annoces" onMouseEnter={() => context?.setActiveMenu(null)}>Annoces</NavLink>
       {[
+
         {
           name: "consultation",
           component: <SideNavConsultation />,
@@ -145,7 +141,7 @@ function Nav() {
         { name: "rapport", component: <SideNavRport /> },
         { name: "progression", component: <SideNavProgestion /> },
         { name: "gestion", component: <SideNavGestion /> },
-        { name: "evaluation", component: <SideNavEvaluation /> },
+
       ].map(({ name, component }) => (
         <div
           key={name}
@@ -163,16 +159,7 @@ function Nav() {
     </nav>
   );
 }
-function Message() {
-  return (
-    <NavLink
-      to="/ens-responsable/chat"
-      className="w-10 h-10 bg-gray-800 shrink-0 lg:w-12 lg:h-12 rounded-full md:bg-gray-400 flex items-center justify-center"
-    >
-      <FaFacebookMessenger className="font-bold text-2xl text-white" />
-    </NavLink>
-  );
-}
+
 function MenuProfile({ setIsOpen }: { setIsOpen: (value: boolean) => void }) {
   const accessToken = useAuthStore((state) => state.accessToken)
   const setAccessToken = useAuthStore((state) => state.setAccessToken)
@@ -214,11 +201,25 @@ function MenuProfile({ setIsOpen }: { setIsOpen: (value: boolean) => void }) {
   );
 }
 function Profile({ setIsOpen }: { setIsOpen: (value: boolean) => void }) {
+  const accessToken = useAuthStore(useShallow((state) => state.accessToken))
+
+  const { data } = useQuery({
+    queryKey: ["profil", accessToken],
+    queryFn: () => getProfil(accessToken!),
+    enabled: !!accessToken
+  });
+
+  if (!data) return null;
   return (
     <div className=" hidden md:block shrink-0" onClick={() => setIsOpen(true)}>
       <img
-        src="https://images.pexels.com/photos/868113/pexels-photo-868113.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
-        alt=""
+        onError={(e) => {
+          const target = e.target as HTMLImageElement;
+          target.onerror = null;
+          target.src = 'https://scontent.fczl2-2.fna.fbcdn.net/v/t1.30497-1/453178253_471506465671661_2781666950760530985_n.png?stp=dst-png_s480x480&_nc_cat=1&ccb=1-7&_nc_sid=136b72&_nc_eui2=AeF_OWSBlL4_ahZGK8uktg7YWt9TLzuBU1Ba31MvO4FTUAcNr-rcAk0Q6wgee_n1MVfJVXKEYXEpVc_A8npzsuDs&_nc_ohc=pCF_EXqQ5MYQ7kNvwGqbQH8&_nc_oc=AdmOQDv_qA9yPoDAQK2j4m8cM77HYt2osPaGYZiWQNIR41-_Kkg1lN_m_n79WacUl90&_nc_zt=24&_nc_ht=scontent.fczl2-2.fna&oh=00_AfEfE4VyUFM1gD2VkajBmRMamhtVSp2NpcihUNDqLsAtzg&oe=681B903A';
+        }}
+        src={`http://localhost:4000/${data.user?.image}`}
+        alt={`${data.user?.prenom} ${data.user?.nom}`}
         loading="lazy"
         className="w-11 h-11 lg:w-12 lg:h-12 rounded-full acpect-ratio-1/1"
       />
@@ -396,7 +397,7 @@ function Header() {
       </NavLink>
       <Nav />
       <div className="flex items-center gap-3 sm:flex sm:items-center  sm:justify-end lg:gap-6">
-        <Message />
+
         <IoMenu
           className="text-3xl font-semibold md:hidden"
           onClick={() => setIsMenuOpen((prev) => !prev)}

@@ -1,18 +1,18 @@
 
 
 import { useMutation } from "@tanstack/react-query";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { IoMdClose } from "react-icons/io";
 import { RiImageAddFill } from "react-icons/ri";
 import { useAuthStore } from "../../../store";
 import { useShallow } from "zustand/shallow";
+import { FaCheckCircle } from "react-icons/fa";
 
 const addNewArticle = async (form: {
     titre: string,
     description: string,
     image?: string
 }, accessToken: string) => {
-    console.log(form, accessToken)
     const response = await fetch('http://localhost:4000/api/admin/annonce', {
         method: "POST",
         headers: {
@@ -35,6 +35,7 @@ const uploadFile = async (formData: FormData) => {
     return response.json();
 };
 const AjouterAnnonces = () => {
+    const [isSucces, setIsSucces] = useState<boolean>(false)
     const accessToken = useAuthStore(useShallow((state) => state.accessToken))
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
@@ -76,11 +77,16 @@ const AjouterAnnonces = () => {
 
         }
     });
+    useEffect(() => {
+        if (isSucces) {
+            const timer = setTimeout(() => setIsSucces(false), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [isSucces]);
     const { mutate: addNewArticleMutate } = useMutation({
         mutationFn: ({ form, accessToken }: { form: { titre: string; description: string; image?: string }, accessToken: string }) => addNewArticle(form, accessToken),
-        onSuccess: (data) => {
-            console.log(data);
-            alert("Article added successfully");
+        onSuccess: () => {
+            setIsSucces(true)
             setForm({ titre: '', description: '', image: '' });
             setImagePreview(null);
             setUploadedImageUrl(null);
@@ -102,6 +108,10 @@ const AjouterAnnonces = () => {
             });
         }
 
+    }
+    const handleCancel = () => {
+        setForm({ titre: '', description: '', image: "" });
+        removeImage()
     }
     return (
         <main className="w-full p-6 flex flex-col mx-auto items-center justify-center gap-2 bg-[#F4F7FD]">
@@ -169,10 +179,13 @@ const AjouterAnnonces = () => {
                     >
                         Ajouter
                     </button>
-                    <button className="w-full bg-red-500 hover:bg-red-700 rounded-md py-2.5 text-white font-medium">
+                    <button onClick={handleCancel} className="w-full bg-red-500 hover:bg-red-700 rounded-md py-2.5 text-white font-medium">
                         Annuler
                     </button>
                 </div>
+            </div>
+            <div className={`py-6 px-4 rounded-md bg-white text-nowrap flex items-center gap-4 shadow drop-shadow absolute ${isSucces ? "bottom-10" : "-bottom-20"} `}>
+                <FaCheckCircle className=" text-green-500 text-3xl" />   <p>Annoce ont été créés avec succès.</p>
             </div>
         </main>
     );

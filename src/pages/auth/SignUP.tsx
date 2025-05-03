@@ -154,7 +154,7 @@ const reducer = (state: State, action: Action) => {
     }
 };
 
-const role: string[] = ["------------------- what is your role ? -------------------", "Responsable", "Principale"];
+const role: string[] = ["------------------- what is your role ? -------------------", "Responsable", "Principale", 'Both'];
 
 const SignUP = () => {
 

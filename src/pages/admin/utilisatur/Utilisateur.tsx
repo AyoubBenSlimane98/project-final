@@ -17,6 +17,17 @@ import { RiDeleteBin5Fill } from "react-icons/ri";
 import { useAuthStore } from "../../../store";
 
 
+type User = {
+    email: string;
+    nom: string;
+    prenom: string;
+    role: 'etudiant' | 'enseignant' | 'admin';
+};
+export type ColumnSort = {
+    id: string;
+    desc: boolean;
+};
+export type SortingState = ColumnSort[];
 
 const getAllUsers = async (accessToken: string) => {
     const response = await fetch('http://localhost:4000/api/admin/all-users', {
@@ -41,7 +52,7 @@ const deleteUser = async ({ email, accessToken }: { accessToken: string, email: 
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify( {email })
+        body: JSON.stringify({ email })
     });
 
     if (!response.ok) {
@@ -51,20 +62,11 @@ const deleteUser = async ({ email, accessToken }: { accessToken: string, email: 
     return response.json();
 }
 
-type User = {
-    email: string;
-    nom: string;
-    prenom: string;
-    role: 'etudiant' | 'enseignant' | 'admin';
-};
-export type ColumnSort = {
-    id: string;
-    desc: boolean;
-};
-export type SortingState = ColumnSort[];
+
 
 const Utilisateur = () => {
     const accessToken = useAuthStore((state) => state.accessToken)
+
     const { data: usersData, refetch } = useQuery({
         queryKey: ["users", accessToken],
         queryFn: ({ queryKey }) => getAllUsers(queryKey[1] as string),
@@ -159,18 +161,20 @@ const Utilisateur = () => {
 
     const { mutate } = useMutation({
         mutationFn: ({ email, accessToken }: { accessToken: string, email: string }) => deleteUser({ email, accessToken }),
-        onSuccess: (data) => {
-            console.log(data)
+        onSuccess: () => {
+            console.log("delete sueeces")
             setIsopen(false)
             refetch()
         },
         onError: (error) => {
+            console.log("delete errorr")
             console.warn(error)
         }
     })
 
     const deleteFn = () => {
         if (selectorUser && accessToken) { mutate({ email: selectorUser.email, accessToken }) }
+
     }
     useEffect(() => {
         if (usersData) {
@@ -242,7 +246,7 @@ const Utilisateur = () => {
                         value={table.getState().pagination.pageSize}
                         onChange={(e) => table.setPageSize(Number(e.target.value))}
                     >
-                        {[5, 10, 15, 20, 30, 40, 50, 100].map((pageSize) => (
+                        {[5, 10, 15, 20].map((pageSize) => (
                             <option key={pageSize} value={pageSize} >
                                 {pageSize}
                             </option>

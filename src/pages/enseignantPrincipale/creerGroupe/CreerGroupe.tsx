@@ -4,6 +4,7 @@ import { IoCloseOutline } from "react-icons/io5";
 import { NavLink } from "react-router";
 import { useAuthStore } from "../../../store";
 import { PiWarningFill } from "react-icons/pi";
+import { FaCheckCircle } from "react-icons/fa";
 
 export type BinomeWithStudents = {
     id: number;
@@ -66,6 +67,7 @@ const CreerGroupe = () => {
     const [count, setCount] = useState<number>(0)
     const [isOpen, setIsOpen] = useState<boolean>(false)
     const [isError, setError] = useState<boolean>(false)
+    const [isSucces, setIsSucces] = useState<boolean>(false)
 
     const groupSize = Math.ceil(count / value);
     const groupes = [];
@@ -111,8 +113,12 @@ const CreerGroupe = () => {
     }, [binomesData])
     const { mutate } = useMutation({
         mutationFn: ({ accessToken, id, users }: { accessToken: string, id: number, users: BinomeWithStudents }) => createGroupes({ accessToken, id, users }),
-        onSuccess: (data) => {
-            console.log("data: ", data)
+        onSuccess: () => {
+            setIsSucces(true)
+            setTimeout(() => {
+                setIsSucces(false)
+            }, 6000)
+
         },
         onError: (error) => {
             setError(true)
@@ -180,6 +186,9 @@ const CreerGroupe = () => {
             </div>
             <div className={`py-6 px-4 rounded-md bg-white text-nowrap flex items-center gap-4 shadow drop-shadow absolute ${isError ? "bottom-10" : "-bottom-20"} `}>
                 <PiWarningFill className=" text-yellow-500 text-3xl" />   <p>Désolé, cette fonctionnalité n'est pas disponible pour le moment. Les groupes ont déjà été créés.</p>
+            </div>
+            <div className={`py-6 px-4 rounded-md bg-white text-nowrap flex items-center gap-4 shadow drop-shadow absolute ${isSucces ? "bottom-10" : "-bottom-20"} `}>
+                <FaCheckCircle className=" text-green-500 text-3xl" />   <p>Les groupes ont été créés avec succès.</p>
             </div>
         </section>
     );

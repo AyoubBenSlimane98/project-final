@@ -1,66 +1,68 @@
 import { createColumnHelper, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BiArrowBack, BiSortAlt2 } from "react-icons/bi"
-import { FaSearch, FaUser } from "react-icons/fa";
+import { FaSearch } from "react-icons/fa";
 import { FaCircleUser } from "react-icons/fa6";
 import { FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight } from "react-icons/fi";
 import { MdGroups2 } from "react-icons/md";
 import { RiPagesLine } from "react-icons/ri";
 import { NavLink } from "react-router"
+import { useAuthStore } from "../../../store";
+import { useQuery } from "@tanstack/react-query";
 
-export type ListeThemePrpos = {
-    id: number;
+type GroupeAffectation = {
+    groupe: string;
     fullName: string;
-    groupe: number;
-    theme: string;
-}
+    sujet: string;
+};
+
 export type ColumnSort = {
     id: string;
     desc: boolean;
 };
-const ListeData: ListeThemePrpos[] = [
-    { "id": 1, "fullName": "A", "groupe": 1, "theme": "Theme A" },
-    { "id": 2, "fullName": "B", "groupe": 2, "theme": "Theme B" },
-    { "id": 3, "fullName": "C", "groupe": 3, "theme": "Theme C" },
-    { "id": 4, "fullName": "D", "groupe": 4, "theme": "Theme D" },
-    { "id": 5, "fullName": "E", "groupe": 5, "theme": "Theme A" },
-    { "id": 6, "fullName": "A", "groupe": 6, "theme": "Theme B" },
-    { "id": 7, "fullName": "B", "groupe": 7, "theme": "Theme C" },
-    { "id": 8, "fullName": "C", "groupe": 8, "theme": "Theme D" },
-    { "id": 9, "fullName": "D", "groupe": 1, "theme": "Theme A" },
-    { "id": 10, "fullName": "E", "groupe": 2, "theme": "Theme B" },
-    { "id": 11, "fullName": "A", "groupe": 3, "theme": "Theme C" },
-    { "id": 12, "fullName": "B", "groupe": 4, "theme": "Theme D" },
-    { "id": 13, "fullName": "C", "groupe": 5, "theme": "Theme A" },
-    { "id": 14, "fullName": "D", "groupe": 6, "theme": "Theme B" },
-    { "id": 15, "fullName": "E", "groupe": 7, "theme": "Theme C" },
-    { "id": 16, "fullName": "A", "groupe": 8, "theme": "Theme D" },
-    { "id": 17, "fullName": "B", "groupe": 1, "theme": "Theme A" },
-    { "id": 18, "fullName": "C", "groupe": 2, "theme": "Theme B" },
-    { "id": 19, "fullName": "D", "groupe": 3, "theme": "Theme C" },
-    { "id": 20, "fullName": "E", "groupe": 4, "theme": "Theme D" }
-]
 
+const getAllAffectation = async (accessToken: string) => {
+    const response = await fetch(`http://localhost:4000/api/principal/sujet-affecrer`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+        },
+    });
+    if (!response.ok) throw new Error("Cannot fetch for get affection themes");
+    return response.json();
+};
 export type SortingState = ColumnSort[];
 const ListeAffectionTheme = () => {
-    const columnHelper = createColumnHelper<ListeThemePrpos>();
+    const accessToken = useAuthStore((state) => state.accessToken)
+    const columnHelper = createColumnHelper<GroupeAffectation>();
+
     const [sorting, setSorting] = useState<SortingState>([]);
     const [globalFilter, setGlobalFilter] = useState('');
-
+    const { data: dataAffectation } = useQuery({
+        queryKey: ['affect'],
+        queryFn: () => getAllAffectation(accessToken!),
+        enabled: !!accessToken
+    });
 
     const [pagination, setPagination] = useState({
         pageIndex: 0,
         pageSize: 8,
     });
-    const [data] = useState<ListeThemePrpos[]>(ListeData);
 
-
+    const [dataAffect, setDataAffect] = useState<GroupeAffectation[]>([]);
+    useEffect(() => {
+        if (dataAffectation) {
+            setDataAffect(dataAffectation)
+        }
+    }, [dataAffectation])
     const columns = useMemo(() => [
-        columnHelper.accessor("id", {
-            cell: (info) => info.getValue(),
+        columnHelper.display({
+            id: 'rowIndex',
+            cell: (info) => info.row.index + 1,
             header: () => (
-                <span className="flex items-center text-white font-medium ">
-                    <FaUser className="mr-2 " /> ID
+                <span className="flex items-center text-white font-medium">
+                     N°
                 </span>
             ),
         }),
@@ -73,7 +75,7 @@ const ListeAffectionTheme = () => {
                 </span>
             ),
         }),
-        columnHelper.accessor("theme", {
+        columnHelper.accessor("sujet", {
 
             cell: (info) => (
                 <span className="italic text-blue-600">{info.getValue()} </span>
@@ -98,7 +100,7 @@ const ListeAffectionTheme = () => {
 
     const table = useReactTable({
         columns,
-        data,
+        data: dataAffect,
         state: {
             sorting,
             globalFilter,

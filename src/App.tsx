@@ -27,8 +27,6 @@ import LayoutAffection from "./layouts/LayoutAffection";
 import FirstStep from "./pages/enseignantResponsable/gestion/affection_cas/FirstStep";
 import SecondStep from "./pages/enseignantResponsable/gestion/affection_cas/SecondStep";
 import ThreedStep from "./pages/enseignantResponsable/gestion/affection_cas/ThreedStep";
-import Chat from "./pages/enseignantResponsable/chat/Chat";
-import AllPost from "./pages/enseignantResponsable/post/AllPost";
 import { OrganiserRenion } from "./pages/enseignantResponsable/gestion/renion/OrganiserRenion";
 import LayoutEtudiant from "./layouts/LayoutEtudiant";
 import Annoces from "./pages/etudiant/Annoces/Annoces";
@@ -46,6 +44,8 @@ import PrivateRoute from "./routes/PrivateRoute";
 import WelcomeEnsP from "./pages/enseignantPrincipale/welcome/WelcomeEnsP";
 import ChangePassword from "./pages/auth/ChangePassword";
 import { useTokenRefresher } from "./hooks/useTokenRefresher";
+import ResponsableAccount from "./pages/enseignantPrincipale/siwtchAccount/ResponsableAccount";
+import PreciserCas from "./pages/enseignantResponsable/gestion/preciser_cas/PreciserCas";
 const App = () => {
     useTokenRefresher()
     return (
@@ -59,7 +59,7 @@ const App = () => {
                 <Route path="change" element={<ChangePassword />} />
             </Route>
 
-            <Route path="/admin" element={<LayoutAdmin />}>
+            <Route path="/admin" element={<PrivateRoute> <LayoutAdmin /></PrivateRoute>}>
                 <Route index element={<Welcome />} />
                 <Route path="ajouter-annoces" element={<AjouterAnnonces />} />
                 <Route path="annonces" element={<ConsulterAnnonces />} />
@@ -77,10 +77,13 @@ const App = () => {
                 <Route path='gestion-groupes/editer-groupes' element={<EditerGroupes />} />
                 <Route path='affecter-theme' element={<AffecterTheme />} />
                 <Route path='profil' element={<Profil />} />
+                <Route path='account' element={<ResponsableAccount />} />
+
             </Route>
 
             <Route path="/ens-responsable" element={<PrivateRoute><LayoutEns /></PrivateRoute>}>
-                <Route index element={<AllPost />} />
+                <Route index element={<Annoces />} />
+                <Route path="annoces" element={<Annoces />} />
                 <Route path="consultation-question" element={<Question />} />
                 <Route path="consultation-binommes" element={<GroupeBinome />} />
                 <Route path="rapport" element={<Rapport />} />
@@ -104,14 +107,15 @@ const App = () => {
                     element={<OrganiserRenion />}
                 />
                 <Route
-                    path="evaluation"
-                    element={<div className="w-full h-svh">evaluation</div>}
+                    path="gestion-preciser-cas"
+                    element={<PreciserCas />}
                 />
+
                 <Route path="compte" element={<Compte />} />
-                <Route path="chat" element={<Chat />} />
+
             </Route>
 
-            <Route path="/etudiant" element={<PrivateRoute><LayoutEtudiant /></PrivateRoute>}>
+            <Route path="/etudiant" element={<LayoutEtudiant />}>
                 <Route index element={<Navigate to="/etudiant/annoces" replace />} />
                 <Route path="annoces" element={<Annoces />} />
                 <Route path="description-sujet" element={<DescriptionSujet />} />

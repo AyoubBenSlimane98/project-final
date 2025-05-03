@@ -17,31 +17,22 @@ import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 import { GiCheckMark } from "react-icons/gi";
 
 
-export type BinomeWithStudents = {
-    etudiant1: {
-        matricule: string;
-        user: {
-            nom: string;
-            prenom: string;
-            sexe: "Male" | "Female";
-            compte: {
-                email: string;
-            };
+
+type Etudiant = {
+    matricule: string;
+    user: {
+        nom: string;
+        sexe: 'Male' | 'Female'; 
+        prenom: string;
+        compte: {
+            email: string;
         };
     };
-    etudiant2: {
-        matricule: string;
-        user: {
-            nom: string;
-            prenom: string;
-            sexe: "Male" | "Female";
-            compte: {
-                email: string;
-            };
-        };
-    } | null;
 };
 
+type BinomeEtu = {
+    etudiant: Etudiant[];
+};
 type CustomSelectProps = {
     responsable: string[];
     label: string;
@@ -49,7 +40,6 @@ type CustomSelectProps = {
     heightInput?: string;
     setPostion: (value: number) => void;
     refetch: () => void;
-    currentPosition: number;
 };
 
 function createGroupes(n: number): string[] {
@@ -116,7 +106,7 @@ const customSortingFn = (
     }
     return rowA.original.binomeID - rowB.original.binomeID;
 };
-function CustomSelect({ responsable, label, width = "w-80", heightInput = "py-2.5", setPostion, refetch, currentPosition }: CustomSelectProps) {
+function CustomSelect({ responsable, label, width = "w-80", heightInput = "py-2.5", setPostion }: CustomSelectProps) {
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const [dataResponsable, setDataResponsable] = useState<string[]>(responsable);
     const [itemSelection, setItemSelection] = useState<string>(responsable.length > 0 ? responsable[0] : "");
@@ -138,10 +128,7 @@ function CustomSelect({ responsable, label, width = "w-80", heightInput = "py-2.
         setIsOpen(false);
 
         const position = dataResponsable.findIndex((res) => res === item);
-        if (position !== -1 && position + 1 !== currentPosition) {
-            setPostion(position + 1);
-            refetch();
-        }
+        setPostion(position + 1)
     };
 
     return (
@@ -198,16 +185,16 @@ const ListeGroupes = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [hoveredBinomeID, setHoveredBinomeID] = useState<number | null>(null);
     const [tableData, setTableData] = useState<BinomeTableRow[]>([]);
-    const [numberG, setNumberG] = useState<number>(-1)
-    const [postion, setPostion] = useState<number>(1)
+    const [groupe, setGroupe] = useState<number>(1)
+    const [position, setPostion] = useState<number>(1)
 
 
-    const groupes = useMemo(() => createGroupes(numberG), [numberG]);
+    const groupes = useMemo(() => createGroupes(groupe), [groupe]);
 
     const { mutate } = useMutation({
         mutationFn: (accessToken: string) => getNumberGroupes(accessToken),
         onSuccess: (data) => {
-            setNumberG(data.numberGroupe)
+            setGroupe(data.numberGroupe)
         },
         onError: (error) => {
             console.warn(error)
@@ -257,34 +244,35 @@ const ListeGroupes = () => {
         queryFn: async ({ queryKey }) => {
             const [, accessToken] = queryKey;
             if (!accessToken) throw new Error("Access token is missing");
-            return getListBinommes({ id: postion, accessToken });
+
+            if (position === undefined) throw new Error("Position is undefined");
+            return getListBinommes({ id: position, accessToken });
         },
     });
 
     useEffect(() => {
         if (binomesData) {
             const formattedRows: BinomeTableRow[] = binomesData.flatMap(
-                (binome: BinomeWithStudents, index: number) => {
+                (binome: BinomeEtu, index: number) => {
                     const rows: BinomeTableRow[] = [];
-
-                    if (binome.etudiant1) {
-                        const e1 = binome.etudiant1.user;
+                    if (binome.etudiant[0]) {
+                        const e1 = binome.etudiant[0].user;
                         rows.push({
                             binomeID: index + 1, // since you don’t have an ID field anymore
                             fullName: `${e1.nom} ${e1.prenom}`,
                             email: e1.compte.email,
                             sexe: e1.sexe,
-                            matricule: binome.etudiant1.matricule,
+                            matricule: binome.etudiant[0].matricule,
                         });
                     }
 
-                    if (binome.etudiant2) {
-                        const e2 = binome.etudiant2.user;
+                    if (binome.etudiant[1]) {
+                        const e2 = binome.etudiant[1].user;
                         rows.push({
                             binomeID: index + 1,
                             fullName: `${e2.nom} ${e2.prenom}`,
                             email: e2.compte.email,
-                            matricule: binome.etudiant2.matricule,
+                            matricule: binome.etudiant[1].matricule,
                             sexe: e2.sexe,
                         });
                     }
@@ -294,6 +282,7 @@ const ListeGroupes = () => {
             );
 
             setTableData(formattedRows);
+
         }
     }, [binomesData]);
 
@@ -314,13 +303,15 @@ const ListeGroupes = () => {
         onGlobalFilterChange: setGlobalFilter,
     });
 
-
+    useEffect(() => {
+        refetch()
+    }, [position, refetch])
     return (
 
         <main className="flex flex-col  py-10 h-svh w-full mx-auto  px-12 bg-[#F4F7FD] relative">
 
             <div className=" flex justify-between items-center mb-8" >
-                {isClose && <CustomSelect responsable={groupes} label="Veuillez sélectionner un groupe :" setPostion={setPostion} refetch={refetch} currentPosition={postion} />}
+                {isClose && <CustomSelect responsable={groupes} label="Veuillez sélectionner un groupe :" refetch={refetch} setPostion={setPostion} />}
                 {
                     isOpen ? <div className={` ${isClose ? "" : "w-full"} flex transform duration-300 ease-in transition-all`}>
                         <input
@@ -431,7 +422,7 @@ const ListeGroupes = () => {
             </div>
 
             <NavLink
-                to="/ens-principale/creer-groupes"
+                to="/ens-principale/gestion-groupes"
                 className="fixed bottom-8 right-4 bg-green-500 hover:bg-green-600 text-white w-12 h-12 rounded-full flex items-center justify-center"
             >
                 <BiArrowBack className="text-2xl" />

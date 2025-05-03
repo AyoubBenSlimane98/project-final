@@ -1,49 +1,73 @@
-import { useState } from "react"
-import { IoClose } from "react-icons/io5";
 
-function InfoCas({ setIsOpen }: { setIsOpen: (isOpen: boolean) => void }) {
+import { AiOutlineDingding } from "react-icons/ai";
 
+import { useAuthStore, useEtudiantStore } from "../../../store";
+import { useShallow } from "zustand/shallow";
+import { useQuery } from "@tanstack/react-query";
+type CasItem = {
+    idCas: number;
+    acteur: string;
+    cas: string;
+};
+const getAllCas = async ({ idG, accessToken }: { idG: number; accessToken: string }) => {
+    const response = await fetch(`http://localhost:4000/api/eutdaint/cas/${idG}/groupe`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+        },
+    });
+    if (!response.ok) throw new Error("Cannot fetch les Cas!");
+    return response.json();
+};
+function CardInfo({ cas }: { cas: CasItem }) {
     return (
-        <div className="shrink-0 w-full h-20 bg-white rounded-2xl flex items-center justify-between px-6 relative drop-shadow shadow border border-gray-50 cursor-pointer ">
-            <p className="max-w-4xl text-nowrap line-clamp-1  ">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Corporis molestias
+        <div className="group">
+            <p className="flex items-center justify-between px-4 py-3 font-serif text-gray-900 text-nowrap hover:bg-black hover:rounded hover:text-white transition-all duration-300 ease-in-out cursor-pointer">
+                <AiOutlineDingding className="text-xl" />
+                <span className="mx-2 text-center flex-1">{cas.acteur}</span>
+                <span className="mx-2 text-center flex-1">{cas.cas}</span>
+                <AiOutlineDingding className="text-xl" />
             </p>
-            <button className="border border-gray-300 w-32 py-1.5 rounded-full hover:bg-black hover:text-white hover:border-none transform duration-300 ease-in-out transition-all cursor-pointer" onClick={() => { setIsOpen(true) }}>Détails</button>
-
+            <hr className="text-gray-200 mb-2 transition-all duration-300 ease-in-out group-hover:opacity-0 group-hover:h-0" />
         </div>
-    )
+    );
 }
 const ListeCasEtud = () => {
-    const [isOpen, setIsOpen] = useState<boolean>(false);
-
+    const accessToken = useAuthStore((state) => state.accessToken)
+    const { acteur, idG, idS, setBinomeId, setGroupId, setSujetId } = useEtudiantStore(useShallow((state) => ({
+        acteur: state.acteur,
+        idG: state.idG,
+        idS: state.idS,
+        setBinomeId: state.setBinomeId,
+        setGroupId: state.setGroupId,
+        setSujetId: state.setSujetId,
+    })))
+    const { data: dataListCas, } = useQuery({
+        queryKey: ['listCas', accessToken, idG],
+        queryFn: async () => {
+            if (accessToken === undefined) throw new Error('accessToken not found')
+            return await getAllCas({ accessToken, idG });
+        },
+        enabled: !!accessToken && idG !== -1,
+        staleTime: 0,
+        gcTime: 0
+    });
+    console.log("dataListCas", dataListCas);
     return (
-        <section className="  w-full h-svh  bg-slate-100 px-10 flex flex-col justify-center items-center pt-20">
-            <div className="bg-white w-full py-4 px-4  rounded-md">
-                <h2 className="text-4xl font-semibold py-6">la list de ses cas :</h2>
-                <div className="bg-slate-100 w-full flex flex-col gap-5 py-6 px-6  h-[520px] overflow-hidden hover:overflow-auto rounded-md">
-                    <InfoCas setIsOpen={setIsOpen} />
-                    <InfoCas setIsOpen={setIsOpen} />
-                    <InfoCas setIsOpen={setIsOpen} />
-                    <InfoCas setIsOpen={setIsOpen} />
-                    <InfoCas setIsOpen={setIsOpen} />
-                    <InfoCas setIsOpen={setIsOpen} />
-                    <InfoCas setIsOpen={setIsOpen} />
-                    <InfoCas setIsOpen={setIsOpen} />
-                    <InfoCas setIsOpen={setIsOpen} />
-                    
+        <section className="  w-full h-svh  flex justify-center items-center bg-slate-100 ">
+            <div className="bg-white py-6 px-4 rounded-md shadow border border-gray-200 flex flex-col gap-2 w-6xl text-xl h-[500px]  ">
+                <div className="flex items-center  justify-between px-6 py-3 font-serif text-gray-900 text-nowrap  rounded-md">
+                    <span>Acteur</span>
+                    <span>cas d'utilisation</span>
                 </div>
-                {isOpen && <div className={`absolute w-xl bg-white drop-shadow-xl shadow-lg rounded-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2  border border-gray-300 z-[9999]`} >
-                    <div className="w-full relative px-4 py-6">
-                        <IoClose className="text-gray-400 text-2xl absolute right-2 top-3 hover:text-red-500 transform duration-300 ease-in-out transition-all cursor-pointer" onClick={() => setIsOpen(!isOpen)} />
-                        <h2 className="py-2">Decription :</h2>
-                        <p className="font-extralight text-gray-950">
-                            Lorem ipsum dolor sit amet consectetur, adipisicing elit. Accusamus blanditiis atque dolores laboriosam molestias ipsa iure iusto reiciendis hic fugiat deleniti nobis repudiandae dicta repellat distinctio, sit neque sint magnam?
-                        </p>
-                    </div>
-                </div>}
+                <hr className="text-gray-300"/>
+                <ul className=" cursor-pointer overflow-hidden w-full h-full px-4 flex flex-col gap-2 rounded-md  hover:overflow-auto   *:rounded-md transform duration-300 ease-in-out transition-all  ">
+                    {dataListCas?.map((item: CasItem) => (
+                        <CardInfo key={item.idCas} cas={item} />
+                    ))}
+                </ul>
             </div>
-
-
         </section>
     )
 }

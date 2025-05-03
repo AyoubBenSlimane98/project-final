@@ -87,7 +87,7 @@ const ListeBinomes = () => {
             cell: (info) => info.getValue(),
             header: () => <span className="text-lg">#</span>,
         }),
-        
+
         columnHelper.accessor("fullName", {
             cell: (info) => info.getValue(),
             header: () => <span className="text-white font-medium">Nom et Prénom</span>,
@@ -170,11 +170,11 @@ const ListeBinomes = () => {
     });
 
     if (isLoading)
-        return <div className="text-center mt-10">Chargement des données...</div>;
+        return <div className="text-center w-full h-svh flex justify-center items-center bg-[#F4F7FD]">Chargement des données...</div>;
 
     if (isError)
         return (
-            <div className="text-center mt-10 text-red-500">
+            <div className="text-center text-red-500 w-full h-svh flex justify-center items-center bg-[#F4F7FD]">
                 Une erreur s’est produite lors du chargement des binômes.
             </div>
         );

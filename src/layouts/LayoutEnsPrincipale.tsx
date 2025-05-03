@@ -7,8 +7,25 @@ import { CgProfile } from "react-icons/cg";
 import { useMutation } from "@tanstack/react-query";
 import { useAuthStore } from "../store";
 import Cookies from "js-cookie";
+import { PiUserSwitchFill } from "react-icons/pi";
+import { useEffect, useState } from "react";
 
+const canSwitchAccount = async (accessToken: string) => {
+    const response = await fetch(
+        "http://localhost:4000/api/principal/switch-account",
+        {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+            },
+        }
+    );
 
+    if (!response.ok) throw new Error("Unauthorized to switch account");
+
+    return response.json();
+}
 const logoutFn = async (accessToken: string) => {
     const response = await fetch(
         "http://localhost:4000/api/authentication/logout",
@@ -29,6 +46,7 @@ const logoutFn = async (accessToken: string) => {
 function Header() {
     const accessToken = useAuthStore((state) => state.accessToken)
     const setAccessToken = useAuthStore((state) => state.setAccessToken)
+    const [canSwitch, setCanSwitch] = useState(false)
     const { mutate } = useMutation({
         mutationFn: logoutFn,
         onSuccess: () => {
@@ -40,11 +58,28 @@ function Header() {
             console.warn("Unauthorized to log out", error)
         }
     })
+    const { mutate: switchMutate } = useMutation({
+        mutationFn: canSwitchAccount,
+        onSuccess: (data) => {
+            if (data.access === true) {
+                setCanSwitch(true)
+            }
+
+        },
+        onError: (error) => {
+            console.warn("Unauthorized to siwtch", error)
+        }
+    })
     const handleLogout = () => {
         if (accessToken) {
             mutate(accessToken);
         }
     };
+    useEffect(() => {
+        if (accessToken) {
+            switchMutate(accessToken)
+        }
+    }, [accessToken, switchMutate])
     return (
         <section className=" min-w-80 h-svh bg-white pt-6 ">
             <div className="flex items-center justify-center gap-2 py-4 ">
@@ -55,7 +90,7 @@ function Header() {
                 <NavLink to='/ens-principale/creer-groupes' className={({ isActive }) =>
                     `basis-full flex items-center justify-baseline gap-3 duration-300 px-6 transform ease-in-out transition-all py-4 ${isActive
                         ? " bg-[#4319FF] *:text-white rounded-md"
-                        : "*:text-[#A3AED0] hover:bg-[#F4F7FD]"
+                        : "*:text-[#A3AED0]  hover:bg-[#F4F7FD]"
                     } `
                 }>
                     <FaRegEdit className=" text-xl" />  <span className="font-medium">Gérer les groupes</span>
@@ -66,7 +101,7 @@ function Header() {
                         : "*:text-[#A3AED0] hover:bg-[#F4F7FD]"
                     } `
                 }>
-                    <TiThList className=" text-xl" />  <span className="font-medium">Gestion des groupes</span>
+                    <TiThList className="text-xl" />  <span className="font-medium">Gestion des groupes</span>
                 </NavLink>
                 <NavLink to='/ens-principale/profil' className={({ isActive }) =>
                     `basis-full flex items-center justify-baseline gap-3 duration-300 px-6 transform ease-in-out transition-all py-4 ${isActive
@@ -76,17 +111,22 @@ function Header() {
                 }>
                     <CgProfile className=" text-xl" />  <span className="font-medium">profil</span>
                 </NavLink>
-
-                <div className="h-96 w-full flex  items-end">
-                    <NavLink to='/sign-in' className={
-                        ` flex items-center justify-baseline px-6 gap-3 duration-300 transform ease-in-out transition-all py-4 text-[#A3AED0]  hover:bg-red-500 hover:text-white rounded-md
+                {canSwitch && <NavLink to='/ens-principale/account' className={({ isActive }) =>
+                    ` text-nowrap basis-full flex items-center justify-baseline gap-3 duration-300 px-6 transform ease-in-out transition-all py-4 ${isActive
+                        ? " bg-[#4319FF] *:text-white rounded-md"
+                        : "*:text-[#A3AED0] hover:bg-[#F4F7FD]"
                     } `
-                    }
-                        onClick={handleLogout}
-                    >
-                        <LuLogOut className=" text-2xl" />  <span className="font-medium" >Se déconnecter</span>
-                    </NavLink>
-                </div>
+                }>
+                    <PiUserSwitchFill className=" text-xl" />  <span className="font-medium"> Compte responsable</span>
+                </NavLink>}
+                <NavLink to='/sign-in' className={
+                    ` flex items-center justify-baseline px-6 gap-3 duration-300 transform ease-in-out transition-all py-4 text-[#A3AED0]  hover:bg-red-500 hover:text-white rounded-md
+                    } `
+                }
+                    onClick={handleLogout}
+                >
+                    <LuLogOut className=" text-2xl" />  <span className="font-medium" >Se déconnecter</span>
+                </NavLink>
             </div>
 
         </section>

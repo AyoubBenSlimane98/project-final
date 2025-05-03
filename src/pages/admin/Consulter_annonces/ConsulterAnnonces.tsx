@@ -7,9 +7,28 @@ import { useAuthStore } from "../../../store";
 import { useShallow } from "zustand/shallow";
 import { IoCloseOutline } from "react-icons/io5";
 
+type MyPostItemprpos = {
+    post: Post;
+    setIsUpdate: (isUpdate: boolean) => void;
+    setUpdatePost: (post: Post) => void;
+    setIsDelete: (isDelete: boolean) => void;
+    refetch: () => void;
+}
+type MyUpdatePrpos = {
+    updatePost: Post;
+    setIsUpdate: (isUpdate: boolean) => void;
+    accessToken: string;
+    refetch: () => void;
+}
+type MyDeletePrpos = {
+    updatePost: Post;
+    accessToken: string;
+    setIsDelete: (isDelete: boolean) => void;
+    refetch: () => void;
+}
 
 type Post = {
-    id: number;
+    idA: number;
     titre: string;
     description: string;
     image: string;
@@ -87,25 +106,7 @@ const updateAnnoces = async ({ id, accessToken, post }: { id: number; accessToke
     if (!response.ok) throw new Error("Upload failed");
     return response.json();
 }
-type MyPostItemprpos = {
-    post: Post;
-    setIsUpdate: (isUpdate: boolean) => void;
-    setUpdatePost: (post: Post) => void;
-    setIsDelete: (isDelete: boolean) => void;
-    refetch: () => void;
-}
-type MyUpdatePrpos = {
-    updatePost: Post;
-    setIsUpdate: (isUpdate: boolean) => void;
-    accessToken: string;
-    refetch: () => void;
-}
-type MyDeletePrpos = {
-    updatePost: Post;
-    accessToken: string;
-    setIsDelete: (isDelete: boolean) => void;
-    refetch: () => void;
-}
+
 function PostItem({ post, setIsUpdate, setUpdatePost, setIsDelete }: MyPostItemprpos) {
     const accessToken = useAuthStore(useShallow((state) => state.accessToken))
     const { data } = useQuery({
@@ -217,7 +218,7 @@ function UpdatePost({ setIsUpdate, updatePost, accessToken, refetch }: MyUpdateP
     })
     const handleUpdatePost = () => {
         if (accessToken && form && updatePost) {
-            updateOldPost({ id: updatePost.id, accessToken, post: { ...form } })
+            updateOldPost({ id: updatePost.idA, accessToken, post: { ...form } })
         }
     }
     return (
@@ -303,7 +304,7 @@ function CardPostToDelete({ accessToken, updatePost, setIsDelete, refetch }: MyD
     })
     const handleDelete = () => {
         if (accessToken && updatePost) {
-            mutate({ id: updatePost.id, accessToken });
+            mutate({ id: updatePost.idA, accessToken });
         }
     }
     return (
@@ -353,7 +354,7 @@ export const ConsulterAnnonces = () => {
             </div>}
             <div className="w-full py-8 h-full overflow-auto flex flex-col items-center gap-y-8">
                 {posts.map((post) => (
-                    <PostItem key={post.id} post={post} setIsUpdate={setIsUpdate} setUpdatePost={setUpdatePost} setIsDelete={setIsDelete} refetch={refetch} />
+                    <PostItem key={post.idA} post={post} setIsUpdate={setIsUpdate} setUpdatePost={setUpdatePost} setIsDelete={setIsDelete} refetch={refetch} />
                 ))}
             </div>
             {isDelete &&
@@ -371,7 +372,7 @@ export const ConsulterAnnonces = () => {
 
 
         </section>
-        // </AnnoncesContext.Provider>
+
     );
 };
 
