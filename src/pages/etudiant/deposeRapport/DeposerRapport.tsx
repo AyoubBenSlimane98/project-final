@@ -1,8 +1,33 @@
-import { ChangeEvent, useEffect, useState } from 'react'
+import { ChangeEvent, useEffect, useRef, useState } from 'react'
 import useDrivePicker from 'react-google-drive-picker';
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
-import { GiCheckMark } from 'react-icons/gi';
 import { RiUploadCloud2Line } from 'react-icons/ri';
+import { useAuthStore, useEtudiantStore } from '../../../store';
+import { useShallow } from 'zustand/shallow';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { IoMdCheckmark } from 'react-icons/io';
+
+enum TacheNom {
+    DiagrammeCasUtilisation = 'Diagramme de cas d’utilisation',
+    DescriptionTextuelle = 'Description Textuelle',
+    DescriptionGraphique = 'Description Graphique',
+    DiagrammeClasseParticipative = 'Diagramme de classe participative',
+    IHM = 'IHM',
+    DiagrammeClasse = 'Diagramme de classe',
+    DiagrammeSequenceDetaille = 'Diagramme de séquence détaillé',
+    Developpement = 'Developpement',
+  }
+
+type Payload = {
+    idB: number;
+    idG:  number;
+    idS:  number;
+    tache: string;
+    nom: string;
+    titre: string;
+    description: string;
+    rapportUrl: string;
+  };
 
 export type casPrpos = {
     nom: string;
@@ -10,87 +35,410 @@ export type casPrpos = {
 export type tachePrpos = {
     nom: string;
 }
-
-type CustomSelectProps = {
-    responsable: casPrpos[] | tachePrpos[];
-    label: string;
+type CasItem = {
+    idCas: number;
+    acteur: string;
+    cas: string;
 };
-const allCas: casPrpos[] = [
-    { nom: "User Authentication" },
-    { nom: "Data Backup" },
-    { nom: "Payment Processing" }
-];
-const alltaches: tachePrpos[] = [
-    { "nom": "Implement login system" },
-    { "nom": "Schedule daily database backups" },
-    { "nom": "Integrate payment gateway" }
-]
-function CustomSelect({ responsable, label }: CustomSelectProps) {
-    const [isOpen, setIsOpen] = useState<boolean>(false);
-    const [dataResponsable, setDataResponsable] = useState(responsable);
-    const [itemSelection, setItemSelection] = useState<string>(responsable.length > 0 ? responsable[0].nom : "");
+type TachItem = {
+    idTach: number;
+    tache: string;
+    groupe: string;
+  };
+export type CustomSelectGroupeProps = {
+    responsable: CasItem[];
+    label?: string;
+};
+export type CustomSelectTacheProps = {
+    responsable: TachItem[];
+    label: string;
+    setTache: (tache:string)=> void;
+  };
 
+  const allTaches: TachItem[] = [
+    { idTach: 1, tache: 'Diagramme de cas d’utilisation', groupe: 'Étape 1 : Analyse (Spécification)' },
+    { idTach: 2, tache: 'Description Textuelle', groupe: 'Étape 1 : Analyse (Spécification)' },
+    { idTach: 3, tache: 'Description Graphique', groupe: 'Étape 1 : Analyse (Spécification)' },
+    { idTach: 4, tache: 'IHM', groupe: 'Étape 1 : Analyse (Spécification)' },
+    { idTach: 5, tache: 'Diagramme de classe participative', groupe: 'Étape 2 : Conception' },
+    { idTach: 6, tache: 'Diagramme de classe', groupe: 'Étape 2 : Conception' },
+    { idTach: 7, tache: 'Diagramme de séquence détaillé', groupe: 'Étape 2 : Conception' },
+    { idTach: 8, tache: 'Développement', groupe: 'Étape 3 : Développement' },
+  ];
+  
+  const deposerRapportEtu = async ({
+    payload,
+    accessToken,
+}: {
+    payload: Payload;
+    accessToken: string;
+}) => {
+    console.log("payload", payload);
+    const response = await fetch(`http://localhost:4000/api/eutdaint/deposer-rapport`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ ...payload }),
+    });
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        console.error("Server error:", error); // Optional: log error details
+        throw new Error("Cannot update binome responsibility");
+    }
+    return response.json();
+};
+const getIdOfSujet = async ({
+    idG,
+    accessToken,
+}: {
+    idG: number;
+    accessToken: string;
+}) => {
+
+    const response = await fetch(`http://localhost:4000/api/responsable/sujet-groupe/${idG}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+        },
+    });
+    if (!response.ok) throw new Error("Cannot fetch for get id of sujet groupe");
+    return response.json();
+};
+const getInfoEtudiant = async (accessToken: string) => {
+    const response = await fetch(`http://localhost:4000/api/eutdaint/binome`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+        },
+    });
+    if (!response.ok) throw new Error("Cannot fetch data of binome!");
+    return response.json();
+};
+
+// const getAllCasOfBinome = async ({ idB, accessToken }: { idB: number; accessToken: string }) => {
+//     console.log("idB", idB);
+//     console.log("accessToken", accessToken);
+//     const response = await fetch(`http://localhost:4000/api/eutdaint/cas/${idB}/binome`, {
+//         method: "GET",
+//         headers: {
+//             "Content-Type": "application/json",
+//             Authorization: `Bearer ${accessToken}`,
+//         },
+//     });
+//     if (!response.ok) throw new Error("Cannot fetch les Cas!");
+//     return response.json();
+// };
+
+// function CustomGroupSelect({ responsable, label }: CustomSelectGroupeProps) {
+//     const [isOpen, setIsOpen] = useState<boolean>(false);
+//     const [dataResponsable, setDataResponsable] = useState<CasItem[]>(responsable);
+//     const [itemSelection, setItemSelection] = useState<CasItem | null>(null);
+//     const inputRef = useRef<HTMLInputElement>(null);
+  
+//     // Initialisation de la sélection
+//     useEffect(() => {
+//       if (responsable.length > 0) {
+//         setDataResponsable(responsable);
+//         setItemSelection(responsable[0]);
+//       }
+//     }, [responsable]);
+  
+//     // Gérer clic en dehors pour fermer le menu
+//     useEffect(() => {
+//       const handleClickOutside = (event: MouseEvent) => {
+//         if (inputRef.current && !inputRef.current.parentElement?.contains(event.target as Node)) {
+//           setIsOpen(false);
+//         }
+//       };
+//       document.addEventListener('mousedown', handleClickOutside);
+//       return () => document.removeEventListener('mousedown', handleClickOutside);
+//     }, []);
+  
+//     // Recherche dans les cas
+//     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+//       const value = event.target.value.toLowerCase();
+//       const filtered = responsable.filter(item => item.cas.toLowerCase().includes(value));
+//       setDataResponsable(filtered);
+//       setItemSelection(filtered.length > 0 ? filtered[0] : null);
+//     };
+  
+//     const handleSelection = (item: CasItem) => {
+//       setItemSelection(item);
+//       setIsOpen(false);
+//       // Si tu veux envoyer au parent : onSelect?.(item);
+//     };
+  
+//     return (
+//       <div className='custom-select-container w-full flex flex-col gap-1 text-[#09090B] py-1'>
+//         <label className='text-md font-medium text-gray-900'>{label}</label>
+//         <div className='relative w-full'>
+//           <input
+//             ref={inputRef}
+//             type="text"
+//             className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 px-4 pr-8'
+//             value={itemSelection?.cas || ''}
+//             onChange={handleChange}
+//             onClick={() => setIsOpen(!isOpen)}
+//             placeholder="Choisir un cas"
+//             readOnly={false}
+//           />
+//           {isOpen ? (
+//             <FiChevronUp
+//               className='absolute top-1/2 right-2 text-xl cursor-pointer transform -translate-y-1/2 transition-all'
+//               onClick={() => setIsOpen(false)}
+//             />
+//           ) : (
+//             <FiChevronDown
+//               className='absolute top-1/2 right-2 text-xl cursor-pointer transform -translate-y-1/2 transition-all'
+//               onClick={() => setIsOpen(true)}
+//             />
+//           )}
+  
+//           {isOpen && (
+//             <ul className='absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-auto'>
+//               {dataResponsable.length > 0 ? (
+//                 dataResponsable.map(item => (
+//                   <li
+//                     key={item.idCas}
+//                     className={`flex items-center gap-2 py-2 px-4 cursor-pointer hover:bg-[#F4F7FD] rounded-sm transition-all ${
+//                       itemSelection?.idCas === item.idCas ? 'bg-[#F4F7FD]' : ''
+//                     }`}
+//                     onClick={() => handleSelection(item)}
+//                   >
+//                     <span>
+//                       {itemSelection?.idCas === item.idCas ? (
+//                         <IoMdCheckmark className='text-[#7CFC00]' />
+//                       ) : (
+//                         <span className='w-4 inline-block' />
+//                       )}
+//                     </span>
+//                     <span className='font-medium'>{item.cas}</span>
+//                   </li>
+//                 ))
+//               ) : (
+//                 <li className='py-2 px-4 text-gray-500'>Aucun résultat trouvé</li>
+//               )}
+//             </ul>
+//           )}
+//         </div>
+//       </div>
+//     );
+//   }
+//   function CustomTacheSelect({ responsable, label,setTache }: CustomSelectTacheProps) {
+//     const [isOpen, setIsOpen] = useState(false);
+//     const [dataResponsable, setDataResponsable] = useState<TachItem[]>(responsable);
+//     const [itemSelection, setItemSelection] = useState<TachItem | null>(null);
+//     const inputRef = useRef<HTMLInputElement>(null);
+  
+//     useEffect(() => {
+//       if (responsable.length > 0) {
+//         setDataResponsable(responsable);
+//         setItemSelection(responsable[0]);
+//         setTache(responsable[0].tache);
+//       }
+//     }, [responsable, setTache]);
+  
+//     useEffect(() => {
+//       const handleClickOutside = (event: MouseEvent) => {
+//         if (inputRef.current && !inputRef.current.parentElement?.contains(event.target as Node)) {
+//           setIsOpen(false);
+//         }
+//       };
+//       document.addEventListener('mousedown', handleClickOutside);
+//       return () => document.removeEventListener('mousedown', handleClickOutside);
+//     }, []);
+  
+//     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+//       const value = event.target.value.toLowerCase();
+//       const filtered = responsable.filter(item => item.tache.toLowerCase().includes(value));
+//       setDataResponsable(filtered);
+//       setItemSelection(filtered.length > 0 ? filtered[0] : null);
+//     };
+  
+//     const handleSelection = (item: TachItem) => {
+//       setItemSelection(item);
+//       setIsOpen(false);
+//         setTache(item.tache);
+//     };
+  
+//     const groupedData = dataResponsable.reduce((acc, item) => {
+//         if (!acc[item.groupe]) acc[item.groupe] = [];
+//         acc[item.groupe].push(item);
+//         return acc;
+//       }, {} as Record<string, TachItem[]>);
+  
+//     return (
+//       <div className='custom-select-container w-full flex flex-col gap-1 text-[#09090B] py-1'>
+//         <label className='text-md font-medium text-gray-900'>{label}</label>
+//         <div className='relative w-full'>
+//           <input
+//             ref={inputRef}
+//             type="text"
+//             className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 px-4 pr-8'
+//             value={itemSelection?.tache || ''}
+//             onChange={handleChange}
+//             onClick={() => setIsOpen(!isOpen)}
+//             placeholder="Choisir un cas"
+//           />
+//           {isOpen ? (
+//             <FiChevronUp
+//               className='absolute top-1/2 right-2 text-xl cursor-pointer transform -translate-y-1/2'
+//               onClick={() => setIsOpen(false)}
+//             />
+//           ) : (
+//             <FiChevronDown
+//               className='absolute top-1/2 right-2 text-xl cursor-pointer transform -translate-y-1/2'
+//               onClick={() => setIsOpen(true)}
+//             />
+//           )}
+  
+//           {isOpen && (
+//             <ul className='absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto'>
+//               {Object.entries(groupedData).map(([groupLabel, items]) => (
+//                 <li key={groupLabel}>
+//                   <div className="px-4 py-2 text-xs font-semibold text-gray-500 bg-gray-100">
+//                     {groupLabel}
+//                   </div>
+//                   {items.map(item => (
+//                     <div
+//                       key={item.idTach}
+//                       className={`flex items-center gap-2 py-2 px-4 cursor-pointer hover:bg-[#F4F7FD] transition-all ${
+//                         itemSelection?.idTach === item.idTach ? 'bg-[#F4F7FD]' : ''
+//                       }`}
+//                       onClick={() => handleSelection(item)}
+//                     >
+//                       <span>
+//                         {itemSelection?.idTach === item.idTach ? (
+//                           <IoMdCheckmark className='text-[#7CFC00]' />
+//                         ) : (
+//                           <span className='w-4 inline-block' />
+//                         )}
+//                       </span>
+//                       <span className='font-medium'>{item.tache}</span>
+//                     </div>
+//                   ))}
+//                 </li>
+//               ))}
+//             </ul>
+//           )}
+//         </div>
+//       </div>
+//     );
+//   }
+function CustomTacheSelect({ responsable, label, setTache }: CustomSelectTacheProps) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [dataResponsable, setDataResponsable] = useState<TachItem[]>(responsable);
+    const [itemSelection, setItemSelection] = useState<TachItem | null>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+  
     useEffect(() => {
+      if (responsable.length > 0) {
         setDataResponsable(responsable);
-    }, [responsable]);
-
+        setItemSelection(responsable[0]);
+        setTache(responsable[0].tache);
+      }
+    }, [responsable, setTache]);
+  
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (inputRef.current && !inputRef.current.parentElement?.contains(event.target as Node)) {
+          setIsOpen(false);
+        }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+  
     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-        event.preventDefault();
-        const value = event.target.value;
-        const filter = responsable.filter((item) => item.nom.toLowerCase().includes(value.toLowerCase()));
-        setDataResponsable(filter);
-        setItemSelection(value);
+      const value = event.target.value.toLowerCase();
+      const filtered = responsable.filter(item => {
+        // البحث باستخدام المفتاح في TacheNom
+        const key = Object.keys(TacheNom).find(key => TacheNom[key as keyof typeof TacheNom].toLowerCase().includes(value));
+        return key && item.tache.toLowerCase().includes(TacheNom[key as keyof typeof TacheNom].toLowerCase());
+      });
+      setDataResponsable(filtered);
+      setItemSelection(filtered.length > 0 ? filtered[0] : null);
     };
-
-    const handleSelection = (item: string) => {
-        setItemSelection(item);
-        setIsOpen(false);
+  
+    const handleSelection = (item: TachItem) => {
+      setItemSelection(item);
+      setIsOpen(false);
+      // إرسال المفتاح بدلاً من القيمة
+      const key = Object.keys(TacheNom).find(key => TacheNom[key as keyof typeof TacheNom] === item.tache);
+      setTache(key || ''); // إرسال المفتاح
     };
-
+  
+    const groupedData = dataResponsable.reduce((acc, item) => {
+      if (!acc[item.groupe]) acc[item.groupe] = [];
+      acc[item.groupe].push(item);
+      return acc;
+    }, {} as Record<string, TachItem[]>);
+  
     return (
-        <div className='w-full flex flex-col gap-2 text-[#09090B] py-1 ' >
-            <h2 className='block mb-1 text-md font-medium text-gray-900'>{label} </h2>
-            <div className='relative w-full'>
-                <div className='relative mb-2'>
-                    <input
-                        type="text"
-                        className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 px-4'
-                        onChange={handleChange}
-                        value={itemSelection}
-                        onClick={() => setIsOpen(!isOpen)}
-                    />
-                    {isOpen ? (
-                        <FiChevronUp className='absolute top-1/2 right-0 text-xl cursor-pointer -translate-y-1/2 -translate-x-1/2 transform duration-300 ease-in-out transition-all' onClick={() => setIsOpen(false)} />
-                    ) : (
-                        <FiChevronDown className='absolute top-1/2  right-0 text-xl cursor-pointer  -translate-y-1/2 -translate-x-1/2 transform duration-300 ease-in-out transition-all' onClick={() => setIsOpen(true)} />
-                    )}
-                </div>
-
-                {isOpen && (
-                    <ul className='absolute z-10 w-full space-y-0.5 bg-white border border-gray-300 rounded-md shadow-lg px-1.5 py-2 max-h-48 overflow-auto'>
-                        {dataResponsable.length > 0 ? (
-                            dataResponsable.map((item, index) => (
-                                <li
-                                    key={index}
-                                    className={`flex items-center gap-2 py-1 px-2.5 cursor-pointer hover:bg-[#F4F7FD] rounded-sm ${itemSelection === item.nom ? "bg-[#F4F7FD]" : ""} transform duration-300 ease-in-out transition-all`}
-                                    onClick={() => handleSelection(item.nom)}
-                                >
-                                    <span>{itemSelection === item.nom ? <GiCheckMark className='text-sm text-[#7CFC00] ' /> : <p className='w-3.5'></p>}</span>
-                                    <span className='font-medium'>{item.nom}</span>
-                                </li>
-                            ))
+      <div className='custom-select-container w-full flex flex-col gap-1 text-[#09090B] py-1'>
+        <label className='text-md font-medium text-gray-900'>{label}</label>
+        <div className='relative w-full'>
+          <input
+            ref={inputRef}
+            type="text"
+            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 px-4 pr-8'
+            value={itemSelection?.tache || ''}
+            onChange={handleChange}
+            onClick={() => setIsOpen(!isOpen)}
+            placeholder="Choisir un cas"
+          />
+          {isOpen ? (
+            <FiChevronUp
+              className='absolute top-1/2 right-2 text-xl cursor-pointer transform -translate-y-1/2'
+              onClick={() => setIsOpen(false)}
+            />
+          ) : (
+            <FiChevronDown
+              className='absolute top-1/2 right-2 text-xl cursor-pointer transform -translate-y-1/2'
+              onClick={() => setIsOpen(true)}
+            />
+          )}
+  
+          {isOpen && (
+            <ul className='absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto'>
+              {Object.entries(groupedData).map(([groupLabel, items]) => (
+                <li key={groupLabel}>
+                  <div className="px-4 py-2 text-xs font-semibold text-gray-500 bg-gray-100">
+                    {groupLabel}
+                  </div>
+                  {items.map(item => (
+                    <div
+                      key={item.idTach}
+                      className={`flex items-center gap-2 py-2 px-4 cursor-pointer hover:bg-[#F4F7FD] transition-all ${
+                        itemSelection?.idTach === item.idTach ? 'bg-[#F4F7FD]' : ''
+                      }`}
+                      onClick={() => handleSelection(item)}
+                    >
+                      <span>
+                        {itemSelection?.idTach === item.idTach ? (
+                          <IoMdCheckmark className='text-[#7CFC00]' />
                         ) : (
-                            <li className='py-1 px-2.5 text-gray-500'>Aucun résultat trouvé</li>
+                          <span className='w-4 inline-block' />
                         )}
-                    </ul>
-                )}
-            </div>
+                      </span>
+                      <span className='font-medium'>{item.tache}</span>
+                    </div>
+                  ))}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
+      </div>
     );
-}
+  }
+  
 const DeposerRapport = () => {
-    const [taches,] = useState(alltaches);
-    const [cas, ] = useState(allCas);
+    const [tache, setTache] = useState<string>('');
     const [nextStep, setNextStep] = useState<boolean>(false);
     const [selectedFile, setSelectedFile] = useState<{
         url: string,
@@ -127,12 +475,91 @@ const DeposerRapport = () => {
     const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setForm((prev) => ({ ...prev, [event.target.name]: event.target.value }));
     };
-    return (
+
+    const accessToken = useAuthStore((state) => state.accessToken)
+       const {idB,  idG, idS, setBinomeId, setGroupId, setSujetId } = useEtudiantStore(useShallow((state) => ({
+           idG: state.idG,
+           idB: state.idB,
+           idS: state.idS,
+           setBinomeId: state.setBinomeId,
+           setGroupId: state.setGroupId,
+           setSujetId: state.setSujetId,
+       })))
+   
+       const { data: dataEtudiant, } = useQuery({
+           queryKey: ['dataEtudiant', accessToken,],
+           queryFn: async () => {
+               if (accessToken === undefined) throw new Error('accessToken not found')
+               return await getInfoEtudiant(accessToken);
+           },
+           enabled: !!accessToken,
+           staleTime: 0,
+           gcTime: 0
+       });
+       useEffect(() => {
+           if (dataEtudiant) {
+               setBinomeId(dataEtudiant.idB);
+               setGroupId(dataEtudiant.idG)
+           }
+       }, [dataEtudiant, setBinomeId, setGroupId]);
+      
+   
+       const { data: sujetId } = useQuery({
+           queryKey: ['sujet-id', idG],
+           queryFn: () => getIdOfSujet({ accessToken: accessToken!, idG }),
+           enabled: !!accessToken && idG !== -1,
+           staleTime: 0,
+           gcTime: 0
+       });
+   
+       useEffect(() => {
+           if (sujetId) {
+               setSujetId(sujetId.idS)
+           }
+       }, [setSujetId, sujetId])
+
+    //    const { data: ListCasBinome } = useQuery({
+    //     queryKey: ['Liste-Cas-binome', idB, accessToken],
+    //     queryFn: () => getAllCasOfBinome({ accessToken: accessToken!, idB }),
+    //     enabled: !!accessToken && idB !== -1,
+    //     staleTime: 0,
+    //     gcTime: 0
+    // });
+
+    const payload ={
+        idB: idB,
+        idG: idG,
+        idS: idS,
+        tache: tache,
+        nom: form.nom,
+        titre: form.nom, 
+        description: form.description,
+        rapportUrl: selectedFile.url
+    }
+    
+    const{mutate}= useMutation({
+        mutationKey: ['deposer-rapport', payload],
+        mutationFn: ({payload,accessToken}:{payload:Payload,accessToken:string}) => deposerRapportEtu({ payload, accessToken: accessToken! }),
+        onSuccess: (data) => {
+            console.log("data", data);
+        },
+        onError: (error) => {
+            console.error("Error depositing report:", error);
+        }
+    })
+    const handleSubmit = () => {
+       if(accessToken && payload){
+        mutate({ payload, accessToken: accessToken! });
+       }
+
+    };
+    console.log("payload", payload);
+       return (
         <section className="w-full h-svh py-8 flex flex-col items-center justify-center bg-[#F4F7FD]">
             {!nextStep && <div className='bg-white w-xl px-6 py-10 rounded-md shadow border border-gray-100  '>
                 <h2 className="text-xl font-semibold text-gray-700 mb-4">Déposer un Rapport</h2>
-                <CustomSelect responsable={taches} label="Veuillez sélectionner une tâche :" />
-                <CustomSelect responsable={cas} label="Veuillez sélectionner un cas :" />
+                <CustomTacheSelect responsable={allTaches} label="Veuillez sélectionner une tâche :" setTache={setTache} />
+                {/* {ListCasBinome&&<CustomGroupSelect responsable={ListCasBinome} label="Veuillez sélectionner un cas :" />} */}
                <div className='py-4'>
                     <div className="flex flex-col items-center justify-center border border-dashed border-gray-400 p-4 rounded-lg  " onClick={handlepickerOpen}>
                         <label className="cursor-pointer flex flex-col items-center space-y-2">
@@ -177,8 +604,9 @@ const DeposerRapport = () => {
                     ></textarea>
                 </div>
                 <div className="flex items-center justify-center gap-x-6  ">
-                    <button className=" outline-none w-full bg-blue-500 hover:bg-blue-700 rounded-md py-2.5 text-white font-medium transform duration-200 ease-in-out transition-all cursor-pointer">Deposer</button>
-                    <button className=" outline-none w-full bg-red-500 hover:bg-red-700  rounded-md py-2.5 text-white font-medium transform duration-200 ease-in-out transition-all cursor-pointer" onClick={() => { setNextStep(!nextStep) }}>Annuler</button>
+                <button className=" outline-none w-full bg-slate-500 hover:bg-slate-700  rounded-md py-2.5 text-white font-medium transform duration-200 ease-in-out transition-all cursor-pointer" onClick={() => { setNextStep(!nextStep) }}>Prescdent</button>
+                    <button onClick={handleSubmit} className=" outline-none w-full bg-blue-500 hover:bg-blue-700 rounded-md py-2.5 text-white font-medium transform duration-200 ease-in-out transition-all cursor-pointer">Deposer</button>
+                  
                 </div>
             </div>}
            

@@ -29,17 +29,7 @@ const getAllCas = async ({ idG, accessToken }: { idG: number; accessToken: strin
     if (!response.ok) throw new Error("Cannot fetch les Cas!");
     return response.json();
 };
-const getAllCasOfBinome = async ({ idB, accessToken }: { idB: number; accessToken: string }) => {
-    const response = await fetch(`http://localhost:4000/api/eutdaint/cas/${idB}/binome`, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-        },
-    });
-    if (!response.ok) throw new Error("Cannot fetch les Cas!");
-    return response.json();
-};
+
 
 function InfoCas({ setIsOpen }: { setIsOpen: (isOpen: boolean) => void }) {
 

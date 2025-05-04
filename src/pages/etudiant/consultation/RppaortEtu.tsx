@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 
+
 type SujetTheme = {
     nom: string;
     description: string;
@@ -9,11 +10,12 @@ const sujetsThemes: SujetTheme = {
     nom: "Artificial Intelligence",
     description: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Suscipit repellat sint maiores perspiciatis eius inventore tempora iste! Quis tempora consectetur laborum deserunt soluta consequuntur fuga, temporibus, doloremque repellendus maxime harum.",
 };
+
 const RppaortEtu = () => {
+
     const [sujet] = useState<SujetTheme>(sujetsThemes);
     
-
-    ;
+        
     return (
         <section className="w-full py-6 mt-20 flex flex-col items-center justify-center bg-[#F4F7FD]">
             <div className="w-4xl flex flex-col gap-8 ">

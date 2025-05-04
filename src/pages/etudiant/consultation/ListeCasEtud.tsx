@@ -35,16 +35,11 @@ function CardInfo({ cas }: { cas: CasItem }) {
 }
 const ListeCasEtud = () => {
     const accessToken = useAuthStore((state) => state.accessToken)
-    const { acteur, idG, idS, setBinomeId, setGroupId, setSujetId } = useEtudiantStore(useShallow((state) => ({
-        acteur: state.acteur,
+    const { idG, } = useEtudiantStore(useShallow((state) => ({
         idG: state.idG,
-        idS: state.idS,
-        setBinomeId: state.setBinomeId,
-        setGroupId: state.setGroupId,
-        setSujetId: state.setSujetId,
     })))
     const { data: dataListCas, } = useQuery({
-        queryKey: ['listCas', accessToken, idG],
+        queryKey: ['CasList', accessToken, idG],
         queryFn: async () => {
             if (accessToken === undefined) throw new Error('accessToken not found')
             return await getAllCas({ accessToken, idG });
@@ -53,7 +48,7 @@ const ListeCasEtud = () => {
         staleTime: 0,
         gcTime: 0
     });
-    console.log("dataListCas", dataListCas);
+    
     return (
         <section className="  w-full h-svh  flex justify-center items-center bg-slate-100 ">
             <div className="bg-white py-6 px-4 rounded-md shadow border border-gray-200 flex flex-col gap-2 w-6xl text-xl h-[500px]  ">
