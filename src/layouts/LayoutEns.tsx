@@ -11,9 +11,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import Cookies from "js-cookie";
 import { useShallow } from "zustand/shallow";
 
-
 const getProfil = async (accessToken: string) => {
-  const response = await fetch('http://localhost:4000/api/principal/profil', {
+  const response = await fetch("http://localhost:4000/api/principal/profil", {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -22,11 +21,11 @@ const getProfil = async (accessToken: string) => {
   });
 
   if (!response.ok) {
-    throw new Error('Failed to get all articles');
+    throw new Error("Failed to get all articles");
   }
 
   return response.json();
-}
+};
 
 const logoutFn = async (accessToken: string) => {
   const response = await fetch(
@@ -43,8 +42,7 @@ const logoutFn = async (accessToken: string) => {
   if (!response.ok) throw new Error("Unauthorized to logout");
 
   return response.json();
-
-}
+};
 type NavBarItemProps = {
   to: string;
   children: React.ReactNode;
@@ -57,13 +55,17 @@ function SideNavConsultation() {
         <NavLink to="/ens-responsable">Consultation rapport</NavLink>
       </li>
       <li>
-        <NavLink to="/ens-responsable/consultation-question">Consultation question</NavLink>
+        <NavLink to="/ens-responsable/consultation-question">
+          Consultation question
+        </NavLink>
       </li>
       <li>
         <NavLink to="/ens-responsable">Consultation feedback</NavLink>
       </li>
       <li>
-        <NavLink to="/ens-responsable/consultation-binommes">Consultation les binomes</NavLink>
+        <NavLink to="/ens-responsable/consultation-binommes">
+          Consultation les binomes
+        </NavLink>
       </li>
       <li>
         <NavLink to="/ens-responsable">Consultation progression</NavLink>
@@ -90,19 +92,34 @@ function SideNavGestion() {
   return (
     <ul className="absolute max-w-fit text-nowrap top-[3.3rem]  space-y-2  bg-gray-800 text-white *:hover:text-green-600 transform transition-all duration-300 ease-in-out rounded-lg shadow-lg  z-[999]  p-4">
       <li>
-        <NavLink to="/ens-responsable/gestion-decrir-le-sujet">Decrir le sujet</NavLink>
+        <NavLink to="/ens-responsable/gestion-decrir-le-sujet">
+          Decrir le sujet
+        </NavLink>
       </li>
       <li>
-        <NavLink to="/ens-responsable/gestion-organiser-renion">Organiser renion</NavLink>
+        <NavLink to="/ens-responsable/gestion-organiser-renion">
+          Organiser renion
+        </NavLink>
       </li>
       <li>
-        <NavLink to="/ens-responsable/gestion-affection-les-cas">Affecter les cas</NavLink>
+        <NavLink to="/ens-responsable/gestion-affection-les-cas">
+          Affecter les cas
+        </NavLink>
       </li>
       <li>
-        <NavLink to="/ens-responsable/gestion-affection-responsabilite">Affecter responsabilite </NavLink>
+        <NavLink to="/ens-responsable/gestion-affection-responsabilite">
+          Affecter responsabilite{" "}
+        </NavLink>
       </li>
       <li>
-        <NavLink to="/ens-responsable/gestion-preciser-cas">Preciser les cas </NavLink>
+        <NavLink to="/ens-responsable/gestion-preciser-cas">
+          Preciser les cas{" "}
+        </NavLink>
+      </li>
+      <li>
+        <NavLink to="/ens-responsable/gestion-preciser-etapes">
+          Preciser les etapes
+        </NavLink>
       </li>
     </ul>
   );
@@ -123,17 +140,18 @@ function SideNavRport() {
   );
 }
 
-
 function Nav() {
   const context = useContext(HeaderContext);
 
   return (
-    <nav
-      className="hidden md:flex h-20 md:items-center md:gap-4  ml-14"
-    >
-      <NavLink to="/ens-responsable/annoces" onMouseEnter={() => context?.setActiveMenu(null)}>Annoces</NavLink>
+    <nav className="hidden md:flex h-20 md:items-center md:gap-4  ml-14">
+      <NavLink
+        to="/ens-responsable/annoces"
+        onMouseEnter={() => context?.setActiveMenu(null)}
+      >
+        Annoces
+      </NavLink>
       {[
-
         {
           name: "consultation",
           component: <SideNavConsultation />,
@@ -141,14 +159,13 @@ function Nav() {
         { name: "rapport", component: <SideNavRport /> },
         { name: "progression", component: <SideNavProgestion /> },
         { name: "gestion", component: <SideNavGestion /> },
-
       ].map(({ name, component }) => (
         <div
           key={name}
           className="relative "
           onMouseEnter={() => context?.setActiveMenu(name)}
         >
-          <p className="px-4 cursor-pointer" >
+          <p className="px-4 cursor-pointer">
             {name.charAt(0).toUpperCase() + name.slice(1)}
           </p>
           <div onMouseLeave={() => context?.setActiveMenu(null)}>
@@ -161,19 +178,19 @@ function Nav() {
 }
 
 function MenuProfile({ setIsOpen }: { setIsOpen: (value: boolean) => void }) {
-  const accessToken = useAuthStore((state) => state.accessToken)
-  const setAccessToken = useAuthStore((state) => state.setAccessToken)
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const setAccessToken = useAuthStore((state) => state.setAccessToken);
   const { mutate } = useMutation({
     mutationFn: logoutFn,
     onSuccess: () => {
-      setAccessToken('');
+      setAccessToken("");
       Cookies.remove("refreshToken");
       sessionStorage.clear();
     },
     onError: (error) => {
-      console.warn("Unauthorized to log out", error)
-    }
-  })
+      console.warn("Unauthorized to log out", error);
+    },
+  });
   const handleLogout = () => {
     if (accessToken) {
       mutate(accessToken);
@@ -201,12 +218,12 @@ function MenuProfile({ setIsOpen }: { setIsOpen: (value: boolean) => void }) {
   );
 }
 function Profile({ setIsOpen }: { setIsOpen: (value: boolean) => void }) {
-  const accessToken = useAuthStore(useShallow((state) => state.accessToken))
+  const accessToken = useAuthStore(useShallow((state) => state.accessToken));
 
   const { data } = useQuery({
     queryKey: ["profil", accessToken],
     queryFn: () => getProfil(accessToken!),
-    enabled: !!accessToken
+    enabled: !!accessToken,
   });
 
   if (!data) return null;
@@ -216,7 +233,8 @@ function Profile({ setIsOpen }: { setIsOpen: (value: boolean) => void }) {
         onError={(e) => {
           const target = e.target as HTMLImageElement;
           target.onerror = null;
-          target.src = 'https://scontent.fczl2-2.fna.fbcdn.net/v/t1.30497-1/453178253_471506465671661_2781666950760530985_n.png?stp=dst-png_s480x480&_nc_cat=1&ccb=1-7&_nc_sid=136b72&_nc_eui2=AeF_OWSBlL4_ahZGK8uktg7YWt9TLzuBU1Ba31MvO4FTUAcNr-rcAk0Q6wgee_n1MVfJVXKEYXEpVc_A8npzsuDs&_nc_ohc=pCF_EXqQ5MYQ7kNvwGqbQH8&_nc_oc=AdmOQDv_qA9yPoDAQK2j4m8cM77HYt2osPaGYZiWQNIR41-_Kkg1lN_m_n79WacUl90&_nc_zt=24&_nc_ht=scontent.fczl2-2.fna&oh=00_AfEfE4VyUFM1gD2VkajBmRMamhtVSp2NpcihUNDqLsAtzg&oe=681B903A';
+          target.src =
+            "https://scontent.fczl2-2.fna.fbcdn.net/v/t1.30497-1/453178253_471506465671661_2781666950760530985_n.png?stp=dst-png_s480x480&_nc_cat=1&ccb=1-7&_nc_sid=136b72&_nc_eui2=AeF_OWSBlL4_ahZGK8uktg7YWt9TLzuBU1Ba31MvO4FTUAcNr-rcAk0Q6wgee_n1MVfJVXKEYXEpVc_A8npzsuDs&_nc_ohc=pCF_EXqQ5MYQ7kNvwGqbQH8&_nc_oc=AdmOQDv_qA9yPoDAQK2j4m8cM77HYt2osPaGYZiWQNIR41-_Kkg1lN_m_n79WacUl90&_nc_zt=24&_nc_ht=scontent.fczl2-2.fna&oh=00_AfEfE4VyUFM1gD2VkajBmRMamhtVSp2NpcihUNDqLsAtzg&oe=681B903A";
         }}
         src={`http://localhost:4000/${data.user?.image}`}
         alt={`${data.user?.prenom} ${data.user?.nom}`}
@@ -388,7 +406,10 @@ function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   return (
     <header className="w-full sm:h-20 flex justify-between items-center  py-1 bg-gray-800 text-white sm:px-4 md:pr-6 fixed top-0 z-50">
-      <NavLink to="/ens-responsable" className="bg-gray-800 sm:flex sm:items-center gap-4">
+      <NavLink
+        to="/ens-responsable"
+        className="bg-gray-800 sm:flex sm:items-center gap-4"
+      >
         <img
           src={logoImg}
           alt=""
@@ -397,7 +418,6 @@ function Header() {
       </NavLink>
       <Nav />
       <div className="flex items-center gap-3 sm:flex sm:items-center  sm:justify-end lg:gap-6">
-
         <IoMenu
           className="text-3xl font-semibold md:hidden"
           onClick={() => setIsMenuOpen((prev) => !prev)}
@@ -430,13 +450,17 @@ function Footer() {
           <h2 className="font-semibold text-lg">Consultation</h2>
           <hr className="text-green-400 sm:w-[12.5rem]" />
           <nav className="flex flex-col gap-2 *:font-extralight">
-            <NavFooter to="/ens-responsable/consultation-binommes">Consultation les binomes</NavFooter>
+            <NavFooter to="/ens-responsable/consultation-binommes">
+              Consultation les binomes
+            </NavFooter>
             <NavFooter to="/ens-responsable">Consultation rapport</NavFooter>
             <NavFooter to="/ens-responsable/consultation-question">
               Consultation question
             </NavFooter>
             <NavFooter to="/ens-responsable">Consultation feedback</NavFooter>
-            <NavFooter to="/ens-responsable">Consultation progression</NavFooter>
+            <NavFooter to="/ens-responsable">
+              Consultation progression
+            </NavFooter>
           </nav>
         </div>
         <div className=" sm:basis-[12.5rem]  flex flex-col gap-4  rounded-lg">
@@ -461,9 +485,15 @@ function Footer() {
           <h2 className="font-semibold text-lg">Gestion</h2>
           <hr className="text-green-400 sm:w-[12.5rem]" />
           <nav className="flex flex-col gap-2 *:font-extralight">
-            <NavFooter to="/ens-responsable/gestion-affection-les-cas">Affecter les cas</NavFooter>
-            <NavFooter to="/ens-responsable/gestion-affection-responsabilite">Affecter responsabilite</NavFooter>
-            <NavFooter to="/ens-responsable/gestion-decrir-le-sujet">Decrir le sujet</NavFooter>
+            <NavFooter to="/ens-responsable/gestion-affection-les-cas">
+              Affecter les cas
+            </NavFooter>
+            <NavFooter to="/ens-responsable/gestion-affection-responsabilite">
+              Affecter responsabilite
+            </NavFooter>
+            <NavFooter to="/ens-responsable/gestion-decrir-le-sujet">
+              Decrir le sujet
+            </NavFooter>
             <NavFooter to="/ens-responsable">Organiser renion</NavFooter>
           </nav>
         </div>
@@ -471,7 +501,9 @@ function Footer() {
           <h2 className="font-semibold text-lg">Evaluation</h2>
           <hr className="text-green-400 sm:w-[12.5rem]" />
           <nav className="flex flex-col gap-2 *:font-extralight">
-            <NavFooter to="/ens-responsable">Evaluation partie theorique</NavFooter>
+            <NavFooter to="/ens-responsable">
+              Evaluation partie theorique
+            </NavFooter>
             <NavFooter to="/ens-responsable">Evaluation les taches</NavFooter>
           </nav>
         </div>
@@ -487,9 +519,12 @@ const LayoutEns = () => {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   return (
     <HeaderContext.Provider value={{ activeMenu, setActiveMenu }}>
-      <div className="flex flex-col" >
+      <div className="flex flex-col">
         <Header />
-        <main onMouseEnter={() => setActiveMenu(null)}> <Outlet /></main>
+        <main onMouseEnter={() => setActiveMenu(null)}>
+          {" "}
+          <Outlet />
+        </main>
         <Footer />
       </div>
     </HeaderContext.Provider>
