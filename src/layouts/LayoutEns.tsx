@@ -73,21 +73,7 @@ function SideNavConsultation() {
     </ul>
   );
 }
-function SideNavProgestion() {
-  return (
-    <ul className="absolute ax-w-fit text-nowrap top-[3.3rem]  space-y-2  bg-gray-800 text-white *:hover:text-green-600 transform transition-all duration-300 ease-in-out rounded-lg shadow-lg p-4 z-[999]">
-      <li>
-        <NavLink to="/ens-responsable">les etapes</NavLink>
-      </li>
-      <li>
-        <NavLink to="/ens-responsable">les groupes </NavLink>
-      </li>
-      <li>
-        <NavLink to="/ens-responsable">les binomes </NavLink>
-      </li>
-    </ul>
-  );
-}
+
 function SideNavGestion() {
   return (
     <ul className="absolute max-w-fit text-nowrap top-[3.3rem]  space-y-2  bg-gray-800 text-white *:hover:text-green-600 transform transition-all duration-300 ease-in-out rounded-lg shadow-lg  z-[999]  p-4">
@@ -121,6 +107,11 @@ function SideNavGestion() {
           Preciser les etapes
         </NavLink>
       </li>
+      <li>
+        <NavLink to="/ens-responsable/gestion-absances">
+          Absances
+        </NavLink>
+      </li>
     </ul>
   );
 }
@@ -151,13 +142,18 @@ function Nav() {
       >
         Annoces
       </NavLink>
+      <NavLink
+        to="/ens-responsable/evaluation"
+        onMouseEnter={() => context?.setActiveMenu(null)}
+      >
+        Evaluation
+      </NavLink>
       {[
         {
           name: "consultation",
           component: <SideNavConsultation />,
         },
         { name: "rapport", component: <SideNavRport /> },
-        { name: "progression", component: <SideNavProgestion /> },
         { name: "gestion", component: <SideNavGestion /> },
       ].map(({ name, component }) => (
         <div
@@ -525,7 +521,7 @@ const LayoutEns = () => {
           {" "}
           <Outlet />
         </main>
-        <Footer />
+        {/* <Footer /> */}
       </div>
     </HeaderContext.Provider>
   );

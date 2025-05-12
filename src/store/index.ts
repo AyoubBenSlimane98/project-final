@@ -6,3 +6,4 @@ export * from "./authStore";
 export * from "./groupeStore";
 export * from "./casStore";
 export * from "./etudiantStore";
+export * from "./evaluationStore";

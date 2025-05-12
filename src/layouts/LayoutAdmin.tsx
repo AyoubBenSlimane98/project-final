@@ -2,12 +2,10 @@ import { NavLink, Outlet } from "react-router"
 import logo from '../assets/logosaa-Photoroom.jpg'
 import { FaRegEdit, FaUsers } from "react-icons/fa"
 import { LuLogOut } from "react-icons/lu"
-import { IoSettings } from "react-icons/io5"
 import { HiAnnotation } from "react-icons/hi"
 import { useAuthStore } from "../store"
 import { useMutation } from "@tanstack/react-query"
 import Cookies from "js-cookie";
-import { IoMdArrowForward } from "react-icons/io"
 import { ImProfile } from "react-icons/im"
 
 

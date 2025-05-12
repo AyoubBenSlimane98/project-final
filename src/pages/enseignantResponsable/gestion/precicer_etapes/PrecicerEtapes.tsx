@@ -32,7 +32,7 @@ function MultiSelectDropdown({
   errorEtape,
 }: {
   setSlectionTaches: (taches: string[]) => void;
-  errorEtape:boolean;
+  errorEtape: boolean;
 }) {
   const [selected, setSelected] = useState<(keyof typeof TacheNom)[]>([]);
   const [open, setOpen] = useState(false);
@@ -123,6 +123,7 @@ const createEtapeTache = async ({
   };
   accessToken: string;
 }) => {
+  console.log(idS, payload);
   const response = await fetch(
     `http://localhost:4000/api/responsable/etape-tache/${idS}`,
     {
@@ -289,7 +290,7 @@ function CustomGroupSelect({ responsable, label }: CustomSelectGroupeProps) {
 function CustomEtapeSelect({
   responsable,
   label,
-  setFromEtape
+  setFromEtape,
 }: CustomSelectEtapeProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [dataResponsable, setDataResponsable] = useState<string[]>(responsable);
@@ -299,16 +300,11 @@ function CustomEtapeSelect({
     if (responsable.length > 0) {
       setDataResponsable(responsable);
       setItemSelection(responsable[0]);
-      setFromEtape({
-        etape: responsable[0],
-        dateDebut: new Date(),
-        dateFin: new Date(),
-      });
     } else {
       setDataResponsable([]);
       setItemSelection(null);
     }
-  }, [responsable, setFromEtape]);
+  }, [responsable]);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value.toLowerCase();
@@ -318,11 +314,6 @@ function CustomEtapeSelect({
     setDataResponsable(filtered);
     if (filtered.length > 0) {
       setItemSelection(filtered[0]);
-      setFromEtape({
-        etape: filtered[0],
-        dateDebut: new Date(),
-        dateFin: new Date(),
-      });
     } else {
       setItemSelection(null);
     }
@@ -332,7 +323,15 @@ function CustomEtapeSelect({
     setItemSelection(item);
     setIsOpen(false);
   };
-
+  useEffect(() => {
+    if (itemSelection) {
+      setFromEtape({
+        etape: itemSelection,
+        dateDebut: new Date(),
+        dateFin: new Date(),
+      });
+    }
+  }, [itemSelection, setFromEtape]);
   return (
     <div className="w-full flex flex-col  gap-2 text-[#09090B] mb-4">
       <h2 className="block mb-2 text-md font-medium text-gray-900">{label}</h2>
@@ -466,29 +465,27 @@ const PrecicerEtapes = () => {
     gcTime: 0,
   });
 
-const handleNext = () => {
-  let hasError = false;
+  const handleNext = () => {
+    let hasError = false;
 
-  if (!slectionTaches || slectionTaches.length === 0) {
-    setErrorEtape(true);
-    hasError = true;
-  }
+    if (!slectionTaches || slectionTaches.length === 0) {
+      setErrorEtape(true);
+      hasError = true;
+    }
 
+    if (formEtape.dateDebut > formEtape.dateFin) {
+      setErrorEtapeDate(true);
+      hasError = true;
+    } else {
+      setErrorEtapeDate(false);
+    }
 
-  if (formEtape.dateDebut > formEtape.dateFin) {
-    setErrorEtapeDate(true);
-    hasError = true;
-  } else {
-    setErrorEtapeDate(false);
-  }
+    if (hasError) return;
 
-  if (hasError) return;
-
-  
-  setErrorDate(false);
-  setErrorEtape(false);
-  setIsNext(false); 
-};
+    setErrorDate(false);
+    setErrorEtape(false);
+    setIsNext(false);
+  };
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -559,6 +556,7 @@ const handleNext = () => {
       });
     }
   };
+  console.log("Etape : ", formEtape.etape);
   return (
     <section className="w-full min-h-screen px-6 pb-10 flex flex-col justify-center items-center gap-4 md:gap-6 sm:px-10 sm:py-6 overflow-hidden bg-[#F4F7FD] relative">
       {isNext ? (
@@ -573,9 +571,11 @@ const handleNext = () => {
             responsable={EtapeNom}
             label="Sélectionner une étape"
             setFromEtape={setFormEtape}
-
           />
-          <MultiSelectDropdown setSlectionTaches={setSlectionTaches} errorEtape={errorEtape} />
+          <MultiSelectDropdown
+            setSlectionTaches={setSlectionTaches}
+            errorEtape={errorEtape}
+          />
           <div className="flex items-center justify-between gap-4 mb-6">
             <div className="basis-1/2">
               <label

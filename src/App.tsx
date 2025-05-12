@@ -47,6 +47,9 @@ import { useTokenRefresher } from "./hooks/useTokenRefresher";
 import ResponsableAccount from "./pages/enseignantPrincipale/siwtchAccount/ResponsableAccount";
 import PreciserCas from "./pages/enseignantResponsable/gestion/preciser_cas/PreciserCas";
 import PrecicerEtapes from "./pages/enseignantResponsable/gestion/precicer_etapes/PrecicerEtapes";
+import AbsanceEtudiant from "./pages/enseignantResponsable/absance_Etu/AbsanceEtudiant";
+import EvaluationRapport from "./pages/enseignantResponsable/evaluation/EvaluationRapport";
+import EvaluationBinome from "./pages/enseignantResponsable/evaluation/EvaluationBinome";
 const App = () => {
   useTokenRefresher();
   return (
@@ -115,10 +118,8 @@ const App = () => {
         <Route path="consultation-question" element={<Question />} />
         <Route path="consultation-binommes" element={<GroupeBinome />} />
         <Route path="rapport" element={<Rapport />} />
-        <Route
-          path="progression"
-          element={<div className="w-full h-svh">progression</div>}
-        />
+        <Route path="evaluation" element={<EvaluationRapport />} />
+        <Route path="evaluation-binome" element={<EvaluationBinome />} />
 
         <Route path="gestion-decrir-le-sujet" element={<DecrirSujet />} />
         <Route
@@ -133,6 +134,7 @@ const App = () => {
         <Route path="gestion-organiser-renion" element={<OrganiserRenion />} />
         <Route path="gestion-preciser-cas" element={<PreciserCas />} />
         <Route path="gestion-preciser-etapes" element={<PrecicerEtapes />} />
+        <Route path="gestion-absances" element={<AbsanceEtudiant />} />
 
         <Route path="compte" element={<Compte />} />
       </Route>

@@ -14,7 +14,7 @@ function AboutMe() {
       <div className="flex items-center space-x-6">
         <div className=" shrink-0 w-24 h-24 relative">
           <img
-            src="https://images.pexels.com/photos/868113/pexels-photo-868113.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+            
             alt=""
             className="w-24 h-24 rounded-full object-cover border border-gray-200 outline-none "
             loading="lazy"
