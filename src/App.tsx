@@ -50,6 +50,7 @@ import PrecicerEtapes from "./pages/enseignantResponsable/gestion/precicer_etape
 import AbsanceEtudiant from "./pages/enseignantResponsable/absance_Etu/AbsanceEtudiant";
 import EvaluationRapport from "./pages/enseignantResponsable/evaluation/EvaluationRapport";
 import EvaluationBinome from "./pages/enseignantResponsable/evaluation/EvaluationBinome";
+import DeposerRapportEtape from "./pages/etudiant/deposeRapport/DeposerRapportEtape";
 const App = () => {
   useTokenRefresher();
   return (
@@ -144,6 +145,7 @@ const App = () => {
         <Route path="annoces" element={<Annoces />} />
         <Route path="description-sujet" element={<DescriptionSujet />} />
         <Route path="deposer-rapport" element={<DeposerRapport />} />
+        <Route path="deposer-rapport-etape" element={<DeposerRapportEtape />} />
         <Route path="rapport" element={<RppaortEtu />} />
         <Route path="liste-cas-etudiant" element={<ListeCasEtud />} />
         <Route path="liste-cas" element={<ListeAllCas />} />

@@ -14,7 +14,7 @@ function AboutMe() {
       <div className="flex items-center space-x-6">
         <div className=" shrink-0 w-24 h-24 relative">
           <img
-            
+            src=""
             alt=""
             className="w-24 h-24 rounded-full object-cover border border-gray-200 outline-none "
             loading="lazy"
@@ -26,8 +26,12 @@ function AboutMe() {
           )}
         </div>
         <div className="flex flex-col space-y-2">
-          <h3 className="font-medium text-lg sm:text-xl uppercase">Benslimane Ayyoub</h3>
-          <p className="font-extralight sm:text-lg text-gray-500">@Ayyoub_ben33</p>
+          <h3 className="font-medium text-lg sm:text-xl uppercase">
+            Benslimane Ayyoub
+          </h3>
+          <p className="font-extralight sm:text-lg text-gray-500">
+            @Ayyoub_ben33
+          </p>
         </div>
       </div>
       <div className="w-full sm:max-w-fit h-full py-2 ">
