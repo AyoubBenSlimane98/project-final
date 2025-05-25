@@ -22,9 +22,7 @@ enum TacheNom {
 type Payload = {
   idB: number;
   idG: number;
-  idS: number;
   tache: string;
-  nom: string;
   titre: string;
   description: string;
   rapportUrl: string;
@@ -84,7 +82,7 @@ const allTaches: TachItem[] = [
     tache: "Diagramme de séquence détaillé",
     groupe: "Étape 2 : Conception",
   },
-  { idTach: 8, tache: "Développement", groupe: "Étape 3 : Développement" },
+  { idTach: 8, tache: "Developpement", groupe: "Étape 3 : Développement" },
 ];
 
 const deposerRapportEtu = async ({
@@ -282,8 +280,8 @@ const DeposerRapport = () => {
     url: "",
     embedUrl: "",
   });
-  const [form, setForm] = useState<{ nom: string; description: string }>({
-    nom: "",
+  const [form, setForm] = useState<{ titre: string; description: string }>({
+    titre: "",
     description: "",
   });
   const [openPicker] = useDrivePicker();
@@ -317,7 +315,7 @@ const DeposerRapport = () => {
   };
 
   const accessToken = useAuthStore((state) => state.accessToken);
-  const { idB, idG, idS, setBinomeId, setGroupId, setSujetId } =
+  const { idB, idG,  setBinomeId, setGroupId, setSujetId } =
     useEtudiantStore(
       useShallow((state) => ({
         idG: state.idG,
@@ -360,21 +358,11 @@ const DeposerRapport = () => {
     }
   }, [setSujetId, sujetId]);
 
-  //    const { data: ListCasBinome } = useQuery({
-  //     queryKey: ['Liste-Cas-binome', idB, accessToken],
-  //     queryFn: () => getAllCasOfBinome({ accessToken: accessToken!, idB }),
-  //     enabled: !!accessToken && idB !== -1,
-  //     staleTime: 0,
-  //     gcTime: 0
-  // });
-
   const payload = {
     idB: idB,
     idG: idG,
-    idS: idS,
     tache: tache,
-    nom: form.nom,
-    titre: form.nom,
+    titre: form.titre,
     description: form.description,
     rapportUrl: selectedFile.url,
   };
@@ -397,7 +385,7 @@ const DeposerRapport = () => {
         setIsSucces(false);
         setNextStep(false);
         setSelectedFile({ embedUrl: "", url: "" });
-        setForm({ nom: "", description: "" });
+        setForm({ titre: "", description: "" });
         setTache("");
       }, 3000);
     },
@@ -424,7 +412,7 @@ const DeposerRapport = () => {
             label="Veuillez sélectionner une tâche :"
             setTache={setTache}
           />
-          {/* {ListCasBinome&&<CustomGroupSelect responsable={ListCasBinome} label="Veuillez sélectionner un cas :" />} */}
+
           <div className="py-4">
             <div
               className="flex flex-col items-center justify-center border border-dashed border-gray-400 p-4 rounded-lg  "
@@ -489,8 +477,8 @@ const DeposerRapport = () => {
             </label>
             <input
               onChange={handleChange}
-              value={form.nom}
-              name="nom"
+              value={form.titre}
+              name="titre"
               type="text"
               placeholder="Entrez le titre  du rapport "
               className="w-full py-1.5 px-4 border border-gray-400 outline-none rounded-md placeholder:text-sm focus:border-2 focus:border-sky-600 focus:outline-2 focus:outline-sky-600 transform duration-200 ease-in transition-all"

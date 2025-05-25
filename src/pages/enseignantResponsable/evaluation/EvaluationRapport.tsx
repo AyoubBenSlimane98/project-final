@@ -427,7 +427,7 @@ const EvaluationRapport = () => {
     }
   }, [groupe, setGroupId]);
   return (
-    <main className="flex flex-col items-center pt-6 w-full mx-auto  px-12 relative mt-20 ">
+    <main className="flex flex-col items-center pt-6 w-full min-h-svh mx-auto  px-12 relative mt-20 ">
       <div className="w-[90%]  flex justify-between items-center mb-8">
         {isClose && groupes && (
           <CustomGroupSelect

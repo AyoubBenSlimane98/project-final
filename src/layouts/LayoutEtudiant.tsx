@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router";
 import logoImg from "../assets/logos-Photoroom.jpg";
 import { PiUserCircleDuotone } from "react-icons/pi";
 import { HiOutlineLogout } from "react-icons/hi";
 import { IoMdNotifications } from "react-icons/io";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "../store";
+import { useShallow } from "zustand/shallow";
+import { RiDeleteBin5Fill } from "react-icons/ri";
 
 const getInfoEtudiant = async (accessToken: string) => {
   const response = await fetch(`http://localhost:4000/api/eutdaint/binome`, {
@@ -26,10 +28,17 @@ function NavBarItem({
   to,
   children,
   setIsMenuOpen,
-}: NavBarItemProps & { setIsMenuOpen: (isMenuOpen: boolean) => void }) {
+  setIsMenuOpen2,
+}: NavBarItemProps & {
+  setIsMenuOpen: (isMenuOpen: boolean) => void;
+  setIsMenuOpen2?: (isMenuOpen: boolean) => void;
+}) {
   return (
     <NavLink
-      onMouseEnter={() => setIsMenuOpen(children === "Consultation")}
+      onMouseEnter={() => {
+        setIsMenuOpen(children === "Consultation");
+        if (setIsMenuOpen2) setIsMenuOpen2(children === "Responsablite");
+      }}
       to={to}
       className={({ isActive }) =>
         `block duration-300 transform ease-in-out transition-all px-2 py-1.5 lg:py-2 lg:px-4  ${
@@ -44,13 +53,14 @@ function NavBarItem({
   );
 }
 function Notification({
+  count,
   setIsOpenNotification,
   isOpenNotification,
 }: {
+  count: number;
   setIsOpenNotification: (prev: boolean) => void;
   isOpenNotification: boolean;
 }) {
-  const [count, setCount] = useState<number>(1);
   return (
     <div
       className=" hidden bg-white  shrink-0  md:flex md:items-center md:justify-center w-11 h-11 lg:w-12 lg:h-12 rounded-full relative"
@@ -88,6 +98,68 @@ function MenuProfile({
     </div>
   );
 }
+
+const getProfil = async (accessToken: string) => {
+  const response = await fetch("http://localhost:4000/api/principal/profil", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to get all articles");
+  }
+
+  return response.json();
+};
+const allFeedBack = async ({
+  accessToken,
+  idB,
+}: {
+  accessToken: string;
+  idB: number;
+}) => {
+  const response = await fetch(
+    `http://localhost:4000/api/eutdaint/feedbacks/${idB}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to get all articles");
+  }
+
+  return response.json();
+};
+const deleteFeedBack = async ({
+  accessToken,
+  idF,
+}: {
+  accessToken: string;
+  idF: number;
+}) => {
+  const response = await fetch(`http://localhost:4000/api/eutdaint/${idF}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to get all articles");
+  }
+
+  return response.json();
+};
+
 function Profile({
   setIsOpenProfile,
   isOpenProfile,
@@ -95,14 +167,28 @@ function Profile({
   setIsOpenProfile: (value: boolean) => void;
   isOpenProfile: boolean;
 }) {
+  const accessToken = useAuthStore(useShallow((state) => state.accessToken));
+
+  const { data } = useQuery({
+    queryKey: ["profil", accessToken],
+    queryFn: () => getProfil(accessToken!),
+    enabled: !!accessToken,
+  });
+
+  if (!data) return null;
   return (
     <div
       className=" hidden md:block shrink-0"
       onClick={() => setIsOpenProfile(!isOpenProfile)}
     >
       <img
-        src="https://images.pexels.com/photos/868113/pexels-photo-868113.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
-        alt=""
+        onError={(e) => {
+          const target = e.target as HTMLImageElement;
+          target.onerror = null;
+          target.src = "";
+        }}
+        src={`http://localhost:4000/${data.user?.image}`}
+        alt={`${data.user?.prenom} ${data.user?.nom}`}
         loading="lazy"
         className="w-11 h-11 lg:w-12 lg:h-12 rounded-full acpect-ratio-1/1"
       />
@@ -136,33 +222,67 @@ function SideNavConsultation() {
     </ul>
   );
 }
-function Nav() {
-  const accessToken = useAuthStore((state) => state.accessToken);
+function SideNavEtape() {
+  return (
+    <ul className="absolute max-w-fit text-nowrap top-[3.8rem]  space-y-2   bg-gray-800 text-white *:hover:text-green-600  transform transition-all duration-300 ease-in-out rounded-lg shadow-lg p-4 z-[999]">
+      <li>
+        <NavLink to="/etudiant/rapport-etapes">
+          Consultation les tâches de votre etape
+        </NavLink>
+      </li>
+      <li>
+        <NavLink to="/etudiant/deposer-rapport-etape">
+          Deposer rapport Responsabilite
+        </NavLink>
+      </li>
+    </ul>
+  );
+}
+function SideNavAllEtapes() {
+  return (
+    <ul className="absolute max-w-fit text-nowrap top-[3.8rem]  space-y-2   bg-gray-800 text-white *:hover:text-green-600  transform transition-all duration-300 ease-in-out rounded-lg shadow-lg p-4 z-[999]">
+      <li>
+        <NavLink to="/etudiant/rapport-all-etapes">
+          Consultation tous chapiter 1 / 2 / 3
+        </NavLink>
+      </li>
+      <li>
+        <NavLink to="/etudiant/deposer-rapport-final">
+          Deposer rapport Responsabilite
+        </NavLink>
+      </li>
+    </ul>
+  );
+}
+function Nav({
+  isOpen,
+  responsabiliteOf,
+}: {
+  isOpen: boolean;
+  responsabiliteOf: string;
+}) {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
-  const { data } = useQuery({
-    queryKey: ["dataEtudiant", accessToken],
-    queryFn: async () => {
-      if (accessToken === undefined) throw new Error("accessToken not found");
-      return await getInfoEtudiant(accessToken);
-    },
-    enabled: !!accessToken,
-    staleTime: 0,
-    gcTime: 0,
-  });
+  const [isMenuOpen2, setIsMenuOpen2] = useState<boolean>(false);
+
   return (
     <nav
       className="hidden md:flex h-20 md:items-center md:gap-4  ml-14"
-      onMouseLeave={() => setIsMenuOpen(false)}
+      onMouseLeave={() => {
+        setIsMenuOpen(false);
+        setIsMenuOpen2(false);
+      }}
     >
       <NavBarItem
         to="/etudiant/annoces"
         children="Annoces"
+        setIsMenuOpen2={setIsMenuOpen2}
         setIsMenuOpen={setIsMenuOpen}
       />
       <div className="relative  transform transition-all duration-300 ease-in-out">
         <NavBarItem
           to="/etudiant/consultation"
           children="Consultation"
+          setIsMenuOpen2={setIsMenuOpen2}
           setIsMenuOpen={setIsMenuOpen}
         />
         {isMenuOpen && <SideNavConsultation />}
@@ -170,29 +290,79 @@ function Nav() {
       <NavBarItem
         to="/etudiant/deposer-rapport"
         children="Rapport Tache"
+        setIsMenuOpen2={setIsMenuOpen2}
         setIsMenuOpen={setIsMenuOpen}
       />
       <NavBarItem
         to="/etudiant/poser-questions"
         children="Poser Questions"
+        setIsMenuOpen2={setIsMenuOpen2}
         setIsMenuOpen={setIsMenuOpen}
       />
-      {data?.responsabilite !== null && (
-        <NavBarItem
-          to="/etudiant/deposer-rapport-etape"
-          children="Rapport Responsablite"
-          setIsMenuOpen={setIsMenuOpen}
-        />
+      {isOpen && (
+        <div className="relative  transform transition-all duration-300 ease-in-out">
+          <NavBarItem
+            to="/etudiant/rapport"
+            children="Responsablite"
+            setIsMenuOpen={setIsMenuOpen}
+            setIsMenuOpen2={setIsMenuOpen2}
+          />
+          {responsabiliteOf !== "introduction_resume_conclustion"
+            ? isMenuOpen2 && <SideNavEtape />
+            : isMenuOpen2 && <SideNavAllEtapes />}
+        </div>
       )}
     </nav>
   );
 }
-function Header() {
+
+function Header({
+  idB,
+  isOpen,
+  responsabiliteOf,
+}: {
+  idB: number;
+  isOpen: boolean;
+  responsabiliteOf: string;
+}) {
+  const [count, setCount] = useState<number>(0);
+
+  const accessToken = useAuthStore((state) => state.accessToken);
   const [isOpenProfile, setIsOpenProfile] = useState<boolean>(false);
   const [popShow, setPopShow] = useState<"compte" | "notification" | "close">(
     "close"
   );
   const [isOpenNotification, setIsOpenNotification] = useState<boolean>(false);
+
+  const { data, refetch } = useQuery({
+    queryKey: ["dataFeedBack", accessToken],
+    queryFn: async () => {
+      if (accessToken === undefined) throw new Error("accessToken not found");
+      return await allFeedBack({ accessToken, idB });
+    },
+    enabled: !!accessToken,
+    staleTime: 0,
+    gcTime: 0,
+  });
+  const { mutate } = useMutation({
+    mutationFn: ({ idF, accessToken }: { idF: number; accessToken: string }) =>
+      deleteFeedBack({
+        idF,
+        accessToken,
+      }),
+    onSuccess: () => {
+      refetch();
+    },
+    onError: (error) => {
+      console.warn("feedback: ", error.message);
+    },
+  });
+  /*--------------------------------------------------------------------------*/
+  useEffect(() => {
+    if (data) {
+      setCount(data.length);
+    }
+  }, [data]);
 
   return (
     <header className="w-full sm:h-20 flex justify-between items-center  py-1 bg-gray-800 text-white sm:px-4 md:pr-6 fixed top-0 z-50">
@@ -206,7 +376,7 @@ function Header() {
           className="w-14 h-14 sm:w-16 sm:h-16 object-contain"
         />
       </NavLink>
-      <Nav />
+      <Nav isOpen={isOpen} responsabiliteOf={responsabiliteOf} />
       <div
         className="flex items-center gap-3 sm:flex sm:items-center  sm:justify-end lg:gap-6 "
         onMouseLeave={() => setPopShow("close")}
@@ -216,6 +386,7 @@ function Header() {
           onMouseEnter={() => setPopShow("notification")}
         >
           <Notification
+            count={count}
             setIsOpenNotification={setIsOpenNotification}
             isOpenNotification={isOpenNotification}
           />
@@ -229,16 +400,35 @@ function Header() {
               <div className="text-gray-950 py-2.5">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-2xl font-medium ">Notification</h2>
-                  <NavLink
-                    to=""
-                    className="underline text-blue-500 hover:text-blue-600"
-                  >
-                    voir tous
-                  </NavLink>
                 </div>
-                <hr className="text-gray-200 w-full h-0.5" />
+                <hr className="text-gray-600 w-full h-0.5" />
+                <ul className="text-gray-700 flex flex-col  py-4 gap-y-3  overflow-auto ">
+                  {count > 0 &&
+                    data?.map(
+                      (
+                        item: { description: string; idF: number },
+                        index: number
+                      ) => (
+                        <li
+                          key={index}
+                          className="text-sm cursor-pointer hover:bg-slate-50 py-2 px-2   flex items-center justify-between border-b border-gray-300 hover:border-b-0 transition duration-150 ease-in-out"
+                        >
+                          {item.description}{" "}
+                          <RiDeleteBin5Fill
+                            className="hover:text-red-600 transition duration-150 ease-in-out  "
+                            onClick={() => {
+                              mutate({
+                                accessToken: accessToken!,
+                                idF: item.idF,
+                              });
+                            }}
+                          />
+                        </li>
+                      )
+                    )}
+                  {count == 0 && <p> Acunan feedback</p>}
+                </ul>
               </div>
-              <div className="">ff</div>
             </div>
           )}
         </div>
@@ -259,10 +449,51 @@ function Header() {
   );
 }
 const LayoutEtudiant = () => {
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [binomeID, setBinomeID] = useState<number>(-1);
+  const [responsabiliteOf, setResponsabilOf] = useState<string>("");
+  const [dataEtu, setDataEtu] = useState<{
+    idB: number;
+    responsabilite: string;
+    idEtape: number;
+    idG: number;
+  }>();
+  const { data } = useQuery({
+    queryKey: ["dataEtudiant", accessToken],
+    queryFn: async () => {
+      if (accessToken === undefined) throw new Error("accessToken not found");
+      return await getInfoEtudiant(accessToken);
+    },
+    enabled: !!accessToken,
+    staleTime: 0,
+    gcTime: 0,
+  });
+  useEffect(() => {
+    if (data) {
+      setDataEtu(data);
+      setResponsabilOf(data.responsabilite);
+      setBinomeID(data.idB);
+    }
+  }, [data]);
+  useEffect(() => {
+    if (dataEtu?.responsabilite !== undefined) {
+      setIsOpen(true);
+    }
+  }, [dataEtu?.responsabilite]);
+  console.log(binomeID);
   return (
     <>
-      <Header />
-      <Outlet />
+      {binomeID !== -1 && (
+        <>
+          <Header
+            isOpen={isOpen}
+            responsabiliteOf={responsabiliteOf}
+            idB={binomeID}
+          />
+          <Outlet />
+        </>
+      )}
     </>
   );
 };

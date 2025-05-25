@@ -5,7 +5,7 @@ import { useAuthStore, useEtudiantStore } from "../../../store";
 import { useShallow } from "zustand/shallow";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { FaCheckCircle } from "react-icons/fa";
-
+import { useMemo } from "react";
 type EtapeType = {
   idEtape: number;
   nom: string;
@@ -14,12 +14,6 @@ type EtapeType = {
 type Payload = {
   idB: number;
   idEtape: number;
-  titre: string;
-  description: string;
-  rapportUrl: string;
-};
-type PayloadM = {
-  idB: number;
   titre: string;
   description: string;
   rapportUrl: string;
@@ -63,7 +57,6 @@ const DeposerRapportEtapeGroupe = async ({
   payload: Payload;
   accessToken: string;
 }) => {
-  console.log("payload", payload);
   const response = await fetch(
     `http://localhost:4000/api/eutdaint/deposer-rapport-etape`,
     {
@@ -77,33 +70,7 @@ const DeposerRapportEtapeGroupe = async ({
   );
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    console.error("Server error:", error); // Optional: log error details
-    throw new Error("Cannot update binome responsibility");
-  }
-  return response.json();
-};
-const DeposerRapportMoimoireGroupe = async ({
-  payload,
-  accessToken,
-}: {
-  payload: PayloadM;
-  accessToken: string;
-}) => {
-  console.log("payload", payload);
-  const response = await fetch(
-    `http://localhost:4000/api/eutdaint/deposer-rapport-memoire`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(payload),
-    }
-  );
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    console.error("Server error:", error); // Optional: log error details
+    console.error("Server error:", error);
     throw new Error("Cannot update binome responsibility");
   }
   return response.json();
@@ -125,7 +92,7 @@ const DeposerRapportEtape = () => {
   const [chapterName, setChapterName] = useState("");
   const [isSucces, setIsSucces] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [etapeId, setEtapeId] = useState<number>(-1);
+
   const [nextStep, setNextStep] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<{
     url: string;
@@ -188,22 +155,26 @@ const DeposerRapportEtape = () => {
     staleTime: 0,
     gcTime: 0,
   });
+
+  const payload = useMemo(
+    () => ({
+      idB: idB,
+      idEtape: -1,
+      titre: form.titre,
+      description: form.description,
+      rapportUrl: selectedFile.url,
+    }),
+    [idB, form.titre, form.description, selectedFile.url]
+  );
+
   useEffect(() => {
     if (dataEtudiant) {
       setBinomeId(dataEtudiant.idB);
+      payload.idEtape = dataEtudiant.idEtape;
       setGroupId(dataEtudiant.idG);
       console.log(dataEtudiant);
     }
-  }, [dataEtudiant, setBinomeId, setGroupId]);
-
-  const payload = {
-    idB: idB,
-    idEtape: etapeId,
-    titre: form.titre,
-    description: form.description,
-    rapportUrl: selectedFile.url,
-  };
-
+  }, [dataEtudiant, payload, setBinomeId, setGroupId]);
   const { data: etapesGroupe } = useQuery({
     queryKey: ["etpes", idG],
     queryFn: () => getAllEtapesOfGroupe({ accessToken: accessToken!, idG }),
@@ -230,33 +201,6 @@ const DeposerRapportEtape = () => {
         setNextStep(false);
         setSelectedFile({ embedUrl: "", url: "" });
         setForm({ titre: "", description: "" });
-        setEtapeId(-1);
-      }, 3000);
-    },
-    onError: (error) => {
-      console.error("Error depositing report:", error);
-    },
-  });
-  const { mutate: rapportMemoire } = useMutation({
-    mutationKey: ["deposer-rapport-memoire", payload],
-    mutationFn: ({
-      payload,
-      accessToken,
-    }: {
-      payload: Payload;
-      accessToken: string;
-    }) => DeposerRapportMoimoireGroupe({ payload, accessToken: accessToken! }),
-    onSuccess: () => {
-      setTimeout(() => {
-        setIsLoading(false);
-        setIsSucces(true);
-      }, 1000);
-      setTimeout(() => {
-        setIsSucces(false);
-        setNextStep(false);
-        setSelectedFile({ embedUrl: "", url: "" });
-        setForm({ titre: "", description: "" });
-        setEtapeId(-1);
       }, 3000);
     },
     onError: (error) => {
@@ -267,11 +211,8 @@ const DeposerRapportEtape = () => {
   const handleSubmit = () => {
     setIsLoading(true);
     if (accessToken && payload) {
-      if (etapeId !== -1 && idB !== -1) {
+      if (idB !== -1) {
         mutate({ payload, accessToken: accessToken! });
-      }
-      if (etapeId === -1 && idB !== -1) {
-        rapportMemoire({ payload, accessToken: accessToken! });
       }
     }
   };
@@ -288,7 +229,6 @@ const DeposerRapportEtape = () => {
         filteredEtapes = filteredEtapes.filter(
           (etape: EtapeType) => etape.nom === "Analyse"
         );
-        setEtapeId(filteredEtapes[0].idEtape);
         break;
 
       case "chapter_2":
@@ -296,7 +236,6 @@ const DeposerRapportEtape = () => {
         filteredEtapes = filteredEtapes.filter(
           (etape: EtapeType) => etape.nom === "Conception"
         );
-        setEtapeId(filteredEtapes[0].idEtape);
         break;
 
       case "chapter_3":
@@ -304,10 +243,6 @@ const DeposerRapportEtape = () => {
         filteredEtapes = filteredEtapes.filter(
           (etape: EtapeType) => etape.nom === "Developpement"
         );
-        setEtapeId(filteredEtapes[0].idEtape);
-        break;
-      case "introduction_resume_conclustion":
-        setChapterName("introduction / resume / conclustion");
         break;
       default:
         break;
@@ -316,13 +251,16 @@ const DeposerRapportEtape = () => {
     setData(filteredEtapes);
   }, [dataEtudiant?.responsabilite, etapesGroupe]);
 
-  console.log({ etapeId, idB });
   return (
     <section className="w-full h-svh py-8 flex flex-col items-center justify-center bg-[#F4F7FD]">
       {!nextStep && (
         <div className="bg-white w-xl px-6 py-10 rounded-md shadow border border-gray-100  ">
           <h2 className="text-xl font-semibold text-gray-700 mb-4">
-            Déposer rapport {chapterName}
+            Déposer rapport{" "}
+            <span className="px-2 text-teal-600 first-letter:uppercase">
+              {" "}
+              {chapterName}
+            </span>
           </h2>
 
           {dataEtudiant?.responsabilite !== "introduction_resume_conclustion" &&

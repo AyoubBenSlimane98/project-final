@@ -541,7 +541,15 @@ const PrecicerEtapes = () => {
       setIsLoading(false);
       setIsSucces(true);
       setTimeout(() => {
+        //////////////////////////////////////////////////////////////
+        setSlectionTaches([]);
         setIsSucces(false);
+        setIsNext(!isNext);
+        setFormEtape({
+          etape: "",
+          dateDebut: new Date(),
+          dateFin: new Date(),
+        });
       }, 3000);
     },
   });
@@ -556,7 +564,7 @@ const PrecicerEtapes = () => {
       });
     }
   };
-  console.log("Etape : ", formEtape.etape);
+
   return (
     <section className="w-full min-h-screen px-6 pb-10 flex flex-col justify-center items-center gap-4 md:gap-6 sm:px-10 sm:py-6 overflow-hidden bg-[#F4F7FD] relative">
       {isNext ? (

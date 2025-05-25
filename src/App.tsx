@@ -20,7 +20,6 @@ import EditerGroupes from "./pages/enseignantPrincipale/listeGroupe/EditerGroupe
 import LayoutEns from "./layouts/LayoutEns";
 import Question from "./pages/enseignantResponsable/consultation/Question";
 import GroupeBinome from "./pages/enseignantResponsable/consultation/GroupeBinome";
-import Rapport from "./pages/enseignantResponsable/rapport/Rapport";
 import DecrirSujet from "./pages/enseignantResponsable/gestion/sujet/DecrirSujet";
 import AffectionResponsablite from "./pages/enseignantResponsable/gestion/affection_res/AffectionResponsablite";
 import LayoutAffection from "./layouts/LayoutAffection";
@@ -44,13 +43,19 @@ import PrivateRoute from "./routes/PrivateRoute";
 import WelcomeEnsP from "./pages/enseignantPrincipale/welcome/WelcomeEnsP";
 import ChangePassword from "./pages/auth/ChangePassword";
 import { useTokenRefresher } from "./hooks/useTokenRefresher";
-import ResponsableAccount from "./pages/enseignantPrincipale/siwtchAccount/ResponsableAccount";
 import PreciserCas from "./pages/enseignantResponsable/gestion/preciser_cas/PreciserCas";
 import PrecicerEtapes from "./pages/enseignantResponsable/gestion/precicer_etapes/PrecicerEtapes";
 import AbsanceEtudiant from "./pages/enseignantResponsable/absance_Etu/AbsanceEtudiant";
 import EvaluationRapport from "./pages/enseignantResponsable/evaluation/EvaluationRapport";
 import EvaluationBinome from "./pages/enseignantResponsable/evaluation/EvaluationBinome";
 import DeposerRapportEtape from "./pages/etudiant/deposeRapport/DeposerRapportEtape";
+import RapportFinal from "./pages/enseignantResponsable/rapport/RapportFinal";
+import RapportEtapes from "./pages/enseignantResponsable/rapport/RapportEtapes";
+import RapportTaches from "./pages/enseignantResponsable/rapport/RapportTaches";
+import RapportEtapeBinome from "./pages/enseignantResponsable/rapport/RapportEtapeBinome";
+import DposerRapportFinal from "./pages/etudiant/deposeRapport/DposerRapportFinal";
+import ConsulterRapportTache from "./pages/etudiant/deposeRapport/ConsulterRapportTache";
+import ConsulterRapportEtapes from "./pages/etudiant/deposeRapport/ConsulterRapportEtapes";
 const App = () => {
   useTokenRefresher();
   return (
@@ -103,7 +108,6 @@ const App = () => {
         />
         <Route path="affecter-theme" element={<AffecterTheme />} />
         <Route path="profil" element={<Profil />} />
-        <Route path="account" element={<ResponsableAccount />} />
       </Route>
 
       <Route
@@ -118,7 +122,10 @@ const App = () => {
         <Route path="annoces" element={<Annoces />} />
         <Route path="consultation-question" element={<Question />} />
         <Route path="consultation-binommes" element={<GroupeBinome />} />
-        <Route path="rapport" element={<Rapport />} />
+        <Route path="rapport-final" element={<RapportFinal />} />
+        <Route path="rapport-etapes" element={<RapportEtapes />} />
+        <Route path="rapport-taches" element={<RapportTaches />} />
+        <Route path="rapport-etapes-binome" element={<RapportEtapeBinome />} />
         <Route path="evaluation" element={<EvaluationRapport />} />
         <Route path="evaluation-binome" element={<EvaluationBinome />} />
 
@@ -146,6 +153,9 @@ const App = () => {
         <Route path="description-sujet" element={<DescriptionSujet />} />
         <Route path="deposer-rapport" element={<DeposerRapport />} />
         <Route path="deposer-rapport-etape" element={<DeposerRapportEtape />} />
+        <Route path="rapport-etapes" element={<ConsulterRapportTache />} />
+        <Route path="rapport-all-etapes" element={<ConsulterRapportEtapes />} />
+        <Route path="deposer-rapport-final" element={<DposerRapportFinal />} />
         <Route path="rapport" element={<RppaortEtu />} />
         <Route path="liste-cas-etudiant" element={<ListeCasEtud />} />
         <Route path="liste-cas" element={<ListeAllCas />} />

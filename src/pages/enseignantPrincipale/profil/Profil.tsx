@@ -6,7 +6,6 @@ import { useAuthStore } from "../../../store";
 import { useShallow } from "zustand/shallow";
 import { BsPatchCheckFill } from "react-icons/bs";
 
-import logo from "../../../assets/profil.png";
 type UserProfile = {
   email: string;
   user: {

@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
 import { NavLink, useNavigate } from "react-router";
@@ -12,7 +12,7 @@ type formPros = {
 };
 
 const loginFn = async (form: { email: string; password: string }) => {
-  console.log(form);
+
   const response = await fetch(
     "http://localhost:4000/api/authentication/sign-in",
     {
@@ -66,13 +66,16 @@ const SignIN = () => {
         }
       }, 3000);
     },
-    onError: (error) => {
-      console.error("Login failed:", error);
-      setError(true);
+    onError: () => {
+      setIsLoading(true);
+      setTimeout(() => {
+        setIsLoading(false);
+        setError(true);
+      }, 2000);
     },
   });
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [, setError] = useState<boolean>(false);
+  const [error, setError] = useState<boolean>(false);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
@@ -91,7 +94,11 @@ const SignIN = () => {
     setError(false);
     mutate({ email: form.email, password: form.password });
   };
-
+  useEffect(() => {
+    if (form.email === "" && form.password === "") {
+      setError(false);
+    }
+  },[form.email, form.password]);
   return (
     <div className="w-full min-h-screen flex justify-center items-center bg-[#f2f4f8] ">
       <div className="bg-white flex flex-col gap-6 px-8 py-10 rounded-2xl shadow w-[31rem]">
@@ -111,7 +118,9 @@ const SignIN = () => {
             value={form.email}
             onChange={handleChange}
             placeholder="Enter your email"
-            className=" outline-none border  border-gray-400 px-4 py-2.5 rounded-lg w-full mb-4"
+            className={`  ${
+              error ? "border-red-500" : "border-gray-400"
+            } outline-none border   px-4 py-2.5 rounded-lg w-full mb-4`}
           />
           <div className="relative">
             <input
@@ -121,7 +130,9 @@ const SignIN = () => {
               value={form.password}
               onChange={handleChange}
               placeholder="Enter your password"
-              className=" outline-none border  border-gray-400 px-4 py-2.5 rounded-lg w-full duration-300 ease-in-out "
+              className={`  ${
+                error ? "border-red-500" : "border-gray-400"
+              } outline-none border   px-4 py-2.5 rounded-lg w-full mb-4`}
             />
             {form.password.length > 0 ? (
               showPassword ? (

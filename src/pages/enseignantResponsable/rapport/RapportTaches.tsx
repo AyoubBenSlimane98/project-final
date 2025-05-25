@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
-import { ChangeEvent } from "react";
-import { FaCheckCircle, FaSearch } from "react-icons/fa";
+import { ChangeEvent, useEffect, useState } from "react";
+import { FaSearch } from "react-icons/fa";
 import {
   useReactTable,
   getCoreRowModel,
@@ -13,10 +12,13 @@ import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 import { useShallow } from "zustand/shallow";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { IoMdCheckmark } from "react-icons/io";
-import { useAuthStore, useResponsablStore } from "../../../../store";
-import { IoCloseOutline } from "react-icons/io5";
-import { AiTwotoneWarning } from "react-icons/ai";
-
+import {
+  useAffectionCasStore,
+  useAuthStore,
+  useEvaluationStore,
+  useGroupeStore,
+} from "../../../store";
+import { useNavigate } from "react-router";
 export type BinomeUser = {
   idB: number;
   bio: string;
@@ -28,7 +30,6 @@ type StudentBinome = {
   matricule: string;
   fullName: string;
   groupe: string;
-  responsabilite: string;
 };
 
 export type Groupe = {
@@ -45,17 +46,6 @@ export type ColumnSort = {
   desc: boolean;
 };
 export type SortingState = ColumnSort[];
-function formatResponsabilite(responsabilite: string): string {
-  if (!responsabilite) return "Pas encore définie";
-
-  if (responsabilite === "introduction_resume_conclustion") {
-    return "introduction / resume / conclustion";
-  }
-
-  return responsabilite
-    .replace(/_/g, " ")
-    .replace(/chapter (\d)/, "chapter $1");
-}
 
 const getResponsableId = async (accessToken: string) => {
   const response = await fetch(
@@ -69,35 +59,6 @@ const getResponsableId = async (accessToken: string) => {
     }
   );
   if (!response.ok) throw new Error("Cannot fetch responsable ID");
-  return response.json();
-};
-
-const updateResponsabilite = async ({
-  idB,
-  responsabilite,
-  accessToken,
-}: {
-  idB: number;
-  responsabilite: string;
-  accessToken: string;
-}) => {
-  console.log("Sending responsabilite:", responsabilite);
-  const response = await fetch(
-    `http://localhost:4000/api/responsable/binome/${idB}/responsabilite`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({ responsabilite }),
-    }
-  );
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    console.error("Server error:", error); // Optional: log error details
-    throw new Error("Cannot update binome responsibility");
-  }
   return response.json();
 };
 const getBinomeData = async ({
@@ -118,6 +79,26 @@ const getBinomeData = async ({
     }
   );
   if (!response.ok) throw new Error("Cannot fetch for get binome data");
+  return response.json();
+};
+const getIdOfSujet = async ({
+  idG,
+  accessToken,
+}: {
+  idG: number;
+  accessToken: string;
+}) => {
+  const response = await fetch(
+    `http://localhost:4000/api/responsable/sujet-groupe/${idG}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+  if (!response.ok) throw new Error("Cannot fetch for get id of sujet groupe");
   return response.json();
 };
 
@@ -151,7 +132,7 @@ const getMemmbersGroupes = async ({
   accessToken: string;
 }) => {
   const response = await fetch(
-    `http://localhost:4000/api/responsable/all-groupes/${idG}/responsabilite`,
+    `http://localhost:4000/api/responsable/all-groupes/${idG}`,
     {
       method: "GET",
       headers: {
@@ -184,7 +165,7 @@ const customFilterFn = <T,>(
 };
 
 function CustomGroupSelect({ responsable, label }: CustomSelectGroupeProps) {
-  const { groupe, setGroupe } = useResponsablStore(
+  const { groupe, setGroupe } = useGroupeStore(
     useShallow((state) => ({
       groupe: state.groupe,
       setGroupe: state.setGroupe,
@@ -195,9 +176,9 @@ function CustomGroupSelect({ responsable, label }: CustomSelectGroupeProps) {
   const [itemSelection, setItemSelection] = useState<Groupe | null>();
 
   useEffect(() => {
-    if (dataResponsable.length > 0 && groupe.idG == -1) {
+    if (dataResponsable.length > 0 && groupe == -1) {
       setItemSelection(dataResponsable[0]);
-      setGroupe(dataResponsable[0]);
+      setGroupe(dataResponsable[0].idG);
     }
   }, [dataResponsable, setGroupe, groupe]);
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -213,7 +194,7 @@ function CustomGroupSelect({ responsable, label }: CustomSelectGroupeProps) {
   const handleSelection = (item: Groupe) => {
     setItemSelection(item);
     setIsOpen(false);
-    setGroupe(item);
+    setGroupe(item.idG);
   };
 
   return (
@@ -228,8 +209,7 @@ function CustomGroupSelect({ responsable, label }: CustomSelectGroupeProps) {
             value={
               itemSelection
                 ? itemSelection.nom
-                : dataResponsable.find((itm) => itm.idG === groupe.idG)?.nom ||
-                  ""
+                : dataResponsable.find((itm) => itm.idG === groupe)?.nom || ""
             }
             onClick={() => setIsOpen(!isOpen)}
           />
@@ -278,257 +258,38 @@ function CustomGroupSelect({ responsable, label }: CustomSelectGroupeProps) {
     </div>
   );
 }
-
-const RESPONSABILITE_DATA = [
-  { key: "chapter_1", label: "chapter 1" },
-  { key: "chapter_2", label: "chapter 2" },
-  { key: "chapter_3", label: "chapter 3" },
-  {
-    key: "introduction_resume_conclustion",
-    label: "introduction / resume / conclusion",
-  },
-];
-
-type Responsabilite = {
-  key: string;
-  label: string;
-};
-
-type CustomResponsabiliteSelectProps = {
-  onSelect: (value: Responsabilite) => void;
-  initialValue?: Responsabilite;
-};
-
-function CustomResponsabiliteSelect({
-  onSelect,
-  initialValue,
-}: CustomResponsabiliteSelectProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [data, setData] = useState<Responsabilite[]>(RESPONSABILITE_DATA);
-  const [selected, setSelected] = useState<Responsabilite | null>(
-    initialValue || null
-  );
-
-  useEffect(() => {
-    if (!selected && data.length > 0) {
-      setSelected(data[0]);
-      onSelect(data[0]);
-    }
-  }, [data, selected, onSelect]);
-
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value.toLowerCase();
-    const filtered = RESPONSABILITE_DATA.filter((item) =>
-      item.label.toLowerCase().includes(value)
-    );
-    setData(filtered);
-    setSelected(filtered.length > 0 ? filtered[0] : null);
-  };
-
-  const handleSelection = (item: Responsabilite) => {
-    setSelected(item);
-    setIsOpen(false);
-    onSelect(item);
-  };
-
-  return (
-    <div className="w-full flex items-center gap-2 text-[#09090B] py-1">
-      <div className="relative w-full">
-        <div className="relative mb-2">
-          <input
-            type="text"
-            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 px-4"
-            onChange={handleChange}
-            value={selected?.label || ""}
-            onClick={() => setIsOpen(!isOpen)}
-          />
-          {isOpen ? (
-            <FiChevronUp
-              className="absolute top-1/2 right-0 text-xl cursor-pointer -translate-y-1/2 -translate-x-1/2"
-              onClick={() => setIsOpen(false)}
-            />
-          ) : (
-            <FiChevronDown
-              className="absolute top-1/2 right-0 text-xl cursor-pointer -translate-y-1/2 -translate-x-1/2"
-              onClick={() => setIsOpen(true)}
-            />
-          )}
-        </div>
-
-        {isOpen && (
-          <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg px-1.5 py-2 max-h-48 overflow-auto space-y-0.5">
-            {data.length > 0 ? (
-              data.map((item) => (
-                <li
-                  key={item.key}
-                  className={`flex items-center gap-2 py-1 px-2.5 cursor-pointer hover:bg-[#F4F7FD] rounded-sm ${
-                    selected?.key === item.key ? "bg-[#F4F7FD]" : ""
-                  }`}
-                  onClick={() => handleSelection(item)}
-                >
-                  <span>
-                    {selected?.key === item.key ? (
-                      <IoMdCheckmark className="text-sm text-[#7CFC00]" />
-                    ) : (
-                      <p className="w-3.5" />
-                    )}
-                  </span>
-                  <span className="font-medium">{item.label}</span>
-                </li>
-              ))
-            ) : (
-              <li className="py-1 px-2.5 text-gray-500">
-                Aucun résultat trouvé
-              </li>
-            )}
-          </ul>
-        )}
-      </div>
-    </div>
-  );
-}
-function CardInfo({ fullName, image }: BinomeUser) {
-  const groupe = useResponsablStore((state) => state.groupe);
-  return (
-    <div
-      className={`flex   flex-col py-6 sm:flex-row items-center  gap-4    sm:py-2 outline-none`}
-    >
-      <img
-        onError={(e) => {
-          const target = e.target as HTMLImageElement;
-          target.onerror = null;
-          target.src =
-            "https://scontent.fczl2-2.fna.fbcdn.net/v/t1.30497-1/453178253_471506465671661_2781666950760530985_n.png?stp=dst-png_s480x480&_nc_cat=1&ccb=1-7&_nc_sid=136b72&_nc_eui2=AeF_OWSBlL4_ahZGK8uktg7YWt9TLzuBU1Ba31MvO4FTUAcNr-rcAk0Q6wgee_n1MVfJVXKEYXEpVc_A8npzsuDs&_nc_ohc=pCF_EXqQ5MYQ7kNvwGqbQH8&_nc_oc=AdmOQDv_qA9yPoDAQK2j4m8cM77HYt2osPaGYZiWQNIR41-_Kkg1lN_m_n79WacUl90&_nc_zt=24&_nc_ht=scontent.fczl2-2.fna&oh=00_AfEfE4VyUFM1gD2VkajBmRMamhtVSp2NpcihUNDqLsAtzg&oe=681B903A";
-        }}
-        src={`http://localhost:4000/${image}`}
-        alt={`Profile picture of ${fullName}`}
-        className="w-14 h-14 rounded-full object-cover"
-        loading="lazy"
-      />
-      <div className=" shrink-0 flex flex-col ">
-        <span className="font-medium">{fullName}</span>
-        <span className="text-gray-500 text-sm first-letter:uppercase">
-          {" "}
-          {groupe.nom}{" "}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function CardResponsable({
-  users,
-  setIsShow,
-  setIsSucces,
-  setIsError,
-  refetch,
-}: {
-  users: BinomeUser[];
-  setIsShow: (isShow: boolean) => void;
-  setIsSucces: (isSucces: boolean) => void;
-  setIsError: (isError: boolean) => void;
-  refetch: () => void;
-}) {
-  const { idB } = useResponsablStore(
+const RapportTaches = () => {
+  const {
+    setBinomeID,
+    setNextstep,
+    addUser,
+    setGroupe,
+    setSujetID,
+    deleteAllCas,
+    binomeId,
+    setActeur,
+  } = useAffectionCasStore(
     useShallow((state) => ({
-      idB: state.idB,
-    }))
-  );
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const accessToken = useAuthStore((state) => state.accessToken);
-  const responsabilite = useResponsablStore((state) => state.responsabilite);
-  const setResponsabilite = useResponsablStore(
-    (state) => state.setResponsabilite
-  );
-  const { mutate } = useMutation({
-    mutationFn: ({
-      idB,
-      responsabilite,
-      accessToken,
-    }: {
-      idB: number;
-      accessToken: string;
-      responsabilite: string;
-    }) =>
-      updateResponsabilite({
-        idB,
-        responsabilite,
-        accessToken,
-      }),
-    onSuccess: () => {
-      setIsLoading(true);
-      setTimeout(() => {
-        setIsSucces(true);
-        setIsLoading(false);
-        setIsShow(false);
-        refetch();
-      }, 2000);
-    },
-    onError: () => {
-      setIsLoading(true);
-      setTimeout(() => {
-        setIsError(true);
-        setIsLoading(false);
-        setIsShow(false);
-      }, 2000);
-    },
-  });
-  const handleResponsabilte = () => {
-    if (accessToken && responsabilite && idB !== -1) {
-      mutate({ accessToken, idB: idB, responsabilite: responsabilite.key });
-    }
-  };
-  return (
-    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-white w-xl flex flex-col px-8 py-10  rounded-md drop-shadow shadow-gray-200 border border-gray-200">
-      <div className="flex justify-between mb-6">
-        <h2 className="text-xl  text-center">
-          Affecter la responsabilte de cette binome?
-        </h2>
-        <IoCloseOutline
-          onClick={() => setIsShow(false)}
-          className=" text-3xl cursor-pointer text-red-400 "
-        />
-      </div>
-      <div className="flex items-center justify-between ">
-        {users.map((_d, index) => (
-          <CardInfo key={index} {..._d} />
-        ))}
-      </div>
-      <CustomResponsabiliteSelect
-        initialValue={{ key: "chapter_2", label: "chapter 2" }}
-        onSelect={(selected) => {
-          setResponsabilite(selected);
-        }}
-      />
-      <div className="w-full flex items-center justify-center gap-x-6 mt-4">
-        <button
-          onClick={() => setIsShow(false)}
-          className="outline-none w-1/2 border border-gray-200 hover:bg-red-500 rounded-md py-2 hover:text-white font-medium transform duration-200 ease-in-out transition-all cursor-pointer"
-        >
-          Annuler
-        </button>
-        <button
-          onClick={handleResponsabilte}
-          className="outline-none w-1/2 bg-blue-500 hover:bg-blue-700 rounded-md py-2 text-white font-medium transform duration-200 ease-in-out transition-all cursor-pointer"
-        >
-          {isLoading ? "Affecter..." : "Affecter"}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-const AffectionResponsablite = () => {
-  const { groupe, setBinomeID, addUsers, users } = useResponsablStore(
-    useShallow((state) => ({
-      groupe: state.groupe,
       setBinomeID: state.setBinomeID,
-      idB: state.idB,
-      addUsers: state.addUsers,
-      users: state.users,
+      setNextstep: state.setNextstep,
+      nextStep: state.nextStep,
+      addUser: state.addUser,
+      deleteAllCas: state.deleteAllCas,
+      setGroupe: state.setGroupe,
+      setSujetID: state.setSujetID,
+      binomeId: state.binomeId,
+      setActeur: state.setActeur,
     }))
   );
 
+  const navigate = useNavigate();
+  const { setBinomeId, setGroupId } = useEvaluationStore(
+    useShallow((state) => ({
+      setBinomeId: state.setBinomeId,
+      setGroupId: state.setGroupId,
+    }))
+  );
+  const groupe = useGroupeStore(useShallow((state) => state.groupe));
   const accessToken = useAuthStore((state) => state.accessToken);
 
   const columnHelper = createColumnHelper<StudentBinome>();
@@ -538,9 +299,6 @@ const AffectionResponsablite = () => {
 
   const [isClose, setIsClose] = useState<boolean>(true);
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [isShow, setIsShow] = useState<boolean>(false);
-  const [isSucces, setIsSucces] = useState<boolean>(false);
-  const [isError, setIsError] = useState<boolean>(false);
 
   const columns = [
     columnHelper.display({
@@ -567,16 +325,20 @@ const AffectionResponsablite = () => {
 
       filterFn: customFilterFn,
     }),
-    columnHelper.accessor("responsabilite", {
-      cell: ({ getValue }) => formatResponsabilite(getValue() as string),
-      header: () => <span className="text-lg">Responsabilite</span>,
-    }),
   ];
 
   const { data: responsableId } = useQuery({
     queryKey: ["responsable"],
     queryFn: () => getResponsableId(accessToken!),
     enabled: !!accessToken,
+  });
+
+  const { data: sujetId } = useQuery({
+    queryKey: ["sujet-id", groupe],
+    queryFn: () => getIdOfSujet({ accessToken: accessToken!, idG: groupe }),
+    enabled: !!accessToken && groupe !== -1,
+    staleTime: 0,
+    gcTime: 0,
   });
 
   const { data: groupes } = useQuery({
@@ -591,20 +353,19 @@ const AffectionResponsablite = () => {
 
   const [data, setData] = useState<StudentBinome[]>([]);
 
-  const { data: memmbersGroupe, refetch } = useQuery({
+  const { data: memmbersGroupe } = useQuery({
     queryKey: ["memmbers", accessToken, groupe],
     queryFn: async () => {
       if (groupe === undefined) throw new Error("No  groupe with id");
       return await getMemmbersGroupes({
         accessToken: accessToken!,
-        idG: groupe.idG,
+        idG: groupe,
       });
     },
     enabled: !!accessToken && groupe !== undefined,
     staleTime: 0,
     gcTime: 0,
   });
-
   useEffect(() => {
     if (memmbersGroupe) {
       setData(memmbersGroupe);
@@ -622,7 +383,6 @@ const AffectionResponsablite = () => {
     onGlobalFilterChange: setGlobalFilter,
     getFilteredRowModel: getFilteredRowModel(),
   });
-
   const { mutate } = useMutation({
     mutationFn: ({ idB, accessToken }: { idB: number; accessToken: string }) =>
       getBinomeData({
@@ -630,27 +390,43 @@ const AffectionResponsablite = () => {
         accessToken,
       }),
     onSuccess: (data) => {
-      addUsers(data);
+      addUser(data);
     },
   });
-
-  const handleData = (id: number) => {
-    setIsShow(true);
+  const handleNext = (id: number) => {
+    setBinomeId(id);
+    setBinomeID(id);
+    if (binomeId !== id) {
+      deleteAllCas();
+      setActeur("");
+    }
     if (accessToken) {
-      setBinomeID(id);
-      mutate({ accessToken, idB: id });
+      mutate({ idB: id, accessToken });
+      setNextstep(true);
+      navigate("/ens-responsable/rapport-etapes-binome");
     }
   };
+  useEffect(() => {
+    if (groupes && groupe) {
+      const found = groupes.find((g: Groupe) => g.idG === groupe);
+      if (found) {
+        setGroupe(found.nom);
+      }
+    }
+  }, [groupe, groupes, setGroupe]);
 
   useEffect(() => {
-    setTimeout(() => setIsSucces(false), 3000);
-  }, [isSucces]);
+    if (sujetId) {
+      setSujetID(sujetId.idS);
+    }
+  }, [setSujetID, sujetId]);
   useEffect(() => {
-    setTimeout(() => setIsError(false), 3000);
-  }, [isError]);
-
+    if (groupe !== -1) {
+      setGroupId(groupe);
+    }
+  }, [groupe, setGroupId]);
   return (
-    <main className="flex flex-col items-center h-svh mt-26 w-full mx-auto  px-12 relative ">
+    <main className="flex flex-col items-center pt-6 w-full min-h-svh mx-auto  px-12 relative mt-20 ">
       <div className="w-[90%]  flex justify-between items-center mb-8">
         {isClose && groupes && (
           <CustomGroupSelect
@@ -738,10 +514,14 @@ const AffectionResponsablite = () => {
                   }`}
                   onMouseEnter={() => setHoveredBinomeID(currentBinomeID)}
                   onMouseLeave={() => setHoveredBinomeID(null)}
-                  onClick={() => handleData(row.original.idB)}
+                  onClick={() => handleNext(row.original.idB)}
                 >
                   {row.getVisibleCells().map((cell) => {
-                    if (["index", "responsabilite"].includes(cell.column.id)) {
+                    if (
+                      ["index", "Supprimer", "Modifier"].includes(
+                        cell.column.id
+                      )
+                    ) {
                       return isFirstOccurrence ? (
                         <td
                           key={cell.id}
@@ -773,33 +553,8 @@ const AffectionResponsablite = () => {
           </tbody>
         </table>
       </div>
-      {isShow && (
-        <CardResponsable
-          users={users}
-          setIsShow={setIsShow}
-          setIsSucces={setIsSucces}
-          setIsError={setIsError}
-          refetch={refetch}
-        />
-      )}
-      <div
-        className={`py-6 px-4 rounded-md bg-white text-nowrap flex items-center gap-4 shadow drop-shadow absolute ${
-          isSucces ? "bottom-40" : "-bottom-40 hidden"
-        } `}
-      >
-        <FaCheckCircle className=" text-green-500 text-3xl" />{" "}
-        <p>La responsabilte a été affectés avec succès.</p>
-      </div>
-      <div
-        className={`py-6 px-4 rounded-md bg-white text-nowrap flex items-center gap-4 shadow drop-shadow absolute ${
-          isError ? "bottom-40" : "-bottom-40 hidden"
-        } `}
-      >
-        <AiTwotoneWarning className=" text-red-500 text-3xl" />{" "}
-        <p>Elle a été assignée à quelqu'un d'autre binome .</p>
-      </div>
     </main>
   );
 };
 
-export default AffectionResponsablite;
+export default RapportTaches;

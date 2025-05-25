@@ -7,6 +7,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { FaCalendarAlt, FaLink, FaClock } from "react-icons/fa";
 
 import { IoClose } from "react-icons/io5";
+import { NavLink } from "react-router";
+import { BiArrowBack } from "react-icons/bi";
 interface Task {
   idR: number;
   tacheNom: string;
@@ -383,8 +385,8 @@ const TaskCard = ({ task, refetch }: { task: Task; refetch: () => void }) => {
           onChange={handleChange}
           className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
         >
-          <option value="Accepté">Accepté</option>
           <option value="Rejeté">Rejeté</option>
+          <option value="Accepté">Accepté</option>
         </select>
 
         <a
@@ -646,6 +648,12 @@ const EvaluationBinome = () => {
           <AddNoteCard setAddNote={setAddNote} etapesOptions={etapesOptions} />
         </section>
       )}
+      <NavLink
+        to="/ens-responsable/evaluation"
+        className="fixed bottom-8 right-4 bg-green-500 hover:bg-green-600 text-white w-12 h-12 rounded-full flex items-center justify-center"
+      >
+        <BiArrowBack className="text-2xl" />
+      </NavLink>
     </section>
   );
 };
