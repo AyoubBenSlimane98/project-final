@@ -9,6 +9,17 @@ import { useAuthStore } from "../store";
 import { useShallow } from "zustand/shallow";
 import { RiDeleteBin5Fill } from "react-icons/ri";
 
+const allGQuestionAndReponse = async (accessToken: string) => {
+  const response = await fetch(`http://localhost:4000/api/eutdaint/questions`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!response.ok) throw new Error("Cannot fetch Questions of etudiant!");
+  return response.json();
+};
 const getInfoEtudiant = async (accessToken: string) => {
   const response = await fetch(`http://localhost:4000/api/eutdaint/binome`, {
     method: "GET",
@@ -20,6 +31,7 @@ const getInfoEtudiant = async (accessToken: string) => {
   if (!response.ok) throw new Error("Cannot fetch data of binome!");
   return response.json();
 };
+
 type NavBarItemProps = {
   to: string;
   children: React.ReactNode;
@@ -155,6 +167,31 @@ const deleteFeedBack = async ({
 
   if (!response.ok) {
     throw new Error("Failed to get all articles");
+  }
+
+  return response.json();
+};
+const deleteQuestion = async ({
+  accessToken,
+  idQ,
+}: {
+  accessToken: string;
+  idQ: number;
+}) => {
+  console.log({ idQ });
+  const response = await fetch(
+    `http://localhost:4000/api/eutdaint/question/${idQ}`,
+    {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to deleted question");
   }
 
   return response.json();
@@ -344,6 +381,16 @@ function Header({
     staleTime: 0,
     gcTime: 0,
   });
+  const { data: questionEtu, refetch: refetchQuestuion } = useQuery({
+    queryKey: ["questionEtud", accessToken],
+    queryFn: async () => {
+      if (accessToken === undefined) throw new Error("accessToken not found");
+      return await allGQuestionAndReponse(accessToken);
+    },
+    enabled: !!accessToken,
+    staleTime: 0,
+    gcTime: 0,
+  });
   const { mutate } = useMutation({
     mutationFn: ({ idF, accessToken }: { idF: number; accessToken: string }) =>
       deleteFeedBack({
@@ -357,12 +404,30 @@ function Header({
       console.warn("feedback: ", error.message);
     },
   });
+  const { mutate: mutateQuestion } = useMutation({
+    mutationFn: ({ idQ, accessToken }: { idQ: number; accessToken: string }) =>
+      deleteQuestion({
+        idQ,
+        accessToken,
+      }),
+    onSuccess: () => {
+      refetchQuestuion();
+    },
+    onError: (error) => {
+      console.warn("feedback: ", error.message);
+    },
+  });
   /*--------------------------------------------------------------------------*/
   useEffect(() => {
     if (data) {
       setCount(data.length);
     }
   }, [data]);
+  useEffect(() => {
+    if (questionEtu) {
+      setCount((prev) => prev + questionEtu.length);
+    }
+  }, [questionEtu]);
 
   return (
     <header className="w-full sm:h-20 flex justify-between items-center  py-1 bg-gray-800 text-white sm:px-4 md:pr-6 fixed top-0 z-50">
@@ -396,7 +461,7 @@ function Header({
             </div>
           )}
           {isOpenNotification && (
-            <div className="flex  px-4 py-2.5 flex-col gap-4 drop-shadow shadow absolute top-17 -right-22  w-[400px]   h-[600px]  space-y-2  bg-white  transform transition-all duration-300 ease-in-out rounded-lg z-[999]">
+            <div className="flex  px-4 py-2.5 flex-col gap-4 drop-shadow shadow absolute top-17 -right-22  w-[400px]   h-[600px]  space-y-2  bg-white  transform transition-all duration-300 ease-in-out rounded z-[999]">
               <div className="text-gray-950 py-2.5">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-2xl font-medium ">Notification</h2>
@@ -411,11 +476,17 @@ function Header({
                       ) => (
                         <li
                           key={index}
-                          className="text-sm cursor-pointer hover:bg-slate-50 py-2 px-2   flex items-center justify-between border-b border-gray-300 hover:border-b-0 transition duration-150 ease-in-out"
+                          className="text-sm cursor-pointer hover:bg-gray-100 py-2 px-2 hover:border hover:border-gray-300  hover:shadow  hover:drop-shadow flex items-center justify-between border-b border-gray-300 hover:border-b-0 transition duration-150 ease-in-out"
                         >
-                          {item.description}{" "}
+                          <span>
+                            <span className=" font-bold">Responsable : </span>{" "}
+                            <span className="text-teal-600">
+                              {" "}
+                              {item.description}
+                            </span>
+                          </span>
                           <RiDeleteBin5Fill
-                            className="hover:text-red-600 transition duration-150 ease-in-out  "
+                            className="hover:text-red-600 transition duration-150 ease-in-out text-lg "
                             onClick={() => {
                               mutate({
                                 accessToken: accessToken!,
@@ -426,7 +497,47 @@ function Header({
                         </li>
                       )
                     )}
-                  {count == 0 && <p> Acunan feedback</p>}
+                  {questionEtu.map(
+                    (item: {
+                      idQ: number;
+                      question: string;
+                      reponse: string;
+                      idF: number;
+                    }) => (
+                      <li
+                        key={item.idQ}
+                        className="text-sm cursor-pointer hover:bg-gray-100 py-2 px-2 hover:border hover:border-gray-300  hover:shadow  hover:drop-shadow flex items-center justify-between border-b border-gray-300 hover:border-b-0 transition duration-150 ease-in-out"
+                      >
+                        <div className=" flex flex-col gap-1.5 text-sm">
+                          <span>
+                            <span className=" font-bold">Question :</span>{" "}
+                            {item.question}
+                          </span>
+                          <span>
+                            <span className=" font-bold">Reponse :</span>{" "}
+                            <span className="text-teal-600">
+                              {item.reponse}
+                            </span>
+                          </span>
+                        </div>
+                        <RiDeleteBin5Fill
+                          className="hover:text-red-600 transition duration-150 ease-in-out text-lg "
+                          onClick={() => {
+                            mutateQuestion({
+                              accessToken: accessToken!,
+                              idQ: item.idQ,
+                            });
+                          }}
+                        />
+                      </li>
+                    )
+                  )}
+                  {count == 0 && (
+                    <p className=" w-full flex items-center justify-center min-h-screen text-gray-400">
+                      {" "}
+                      Acunan notification
+                    </p>
+                  )}
                 </ul>
               </div>
             </div>
@@ -481,7 +592,7 @@ const LayoutEtudiant = () => {
       setIsOpen(true);
     }
   }, [dataEtu?.responsabilite]);
-  console.log(binomeID);
+
   return (
     <>
       {binomeID !== -1 && (
