@@ -12,7 +12,6 @@ type formPros = {
 };
 
 const loginFn = async (form: { email: string; password: string }) => {
-
   const response = await fetch(
     "http://localhost:4000/api/authentication/sign-in",
     {
@@ -98,7 +97,7 @@ const SignIN = () => {
     if (form.email === "" && form.password === "") {
       setError(false);
     }
-  },[form.email, form.password]);
+  }, [form.email, form.password]);
   return (
     <div className="w-full min-h-screen flex justify-center items-center bg-[#f2f4f8] ">
       <div className="bg-white flex flex-col gap-6 px-8 py-10 rounded-2xl shadow w-[31rem]">
@@ -132,7 +131,7 @@ const SignIN = () => {
               placeholder="Enter your password"
               className={`  ${
                 error ? "border-red-500" : "border-gray-400"
-              } outline-none border   px-4 py-2.5 rounded-lg w-full mb-4`}
+              } outline-none border   px-4 py-2.5 rounded-lg w-full `}
             />
             {form.password.length > 0 ? (
               showPassword ? (
@@ -166,6 +165,15 @@ const SignIN = () => {
           >
             {isLoading ? " Sign in ..." : " Sign in"}
           </button>
+          {error ? (
+           <div className=" text-center">
+              <p className="text-sm text-red-600">
+                Email or Password is incorrect or your account is bloqued
+              </p>
+           </div>
+          ) : (
+            ""
+          )}
         </form>
         <div className="flex items-center justify-center gap-x-0.5 ">
           <p className="font-light">
